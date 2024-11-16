@@ -6,7 +6,21 @@ import json
 from branca.colormap import LinearColormap
 
 # Konfigurasi awal dashboard
-st.set_page_config(layout="wide", page_title="Dashboard Cluster Sumatera Utara")
+st.set_page_config(
+    layout="wide", 
+    page_title="Dashboard Cluster Sumatera Utara",
+    initial_sidebar_state="collapsed"  # Sembunyikan sidebar
+)
+
+# Sembunyikan menu hamburger dan footer
+hide_streamlit_style = """
+    <style>
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+    </style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # Definisi warna dan label cluster
 cluster_colors = {
