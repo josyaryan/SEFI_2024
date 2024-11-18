@@ -31,17 +31,17 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # Definisi warna dan label cluster
 cluster_colors = {
-    0: '#FF0000',  # Merah untuk Wilayah Berkembang
-    1: '#FFA500',  # Orange untuk Wilayah Maju
-    2: '#FFFF00',  # Kuning untuk Wilayah Sangat Maju
-    3: '#008000'   # Hijau untuk Wilayah Paling Maju
+    0: '#4D96FF',  # untuk Wilayah Maju/Kota Besar
+    1: '#FFD93D',  # untuk Wilayah Berkembang dengan Tantangan Kemiskinan
+    2: '#FF6B6B',  # untuk Wilayah Tertinggal
+    3: '#6BCB77'   # untuk Wilayah Menengah/Transisi
 }
 
 cluster_labels = {
-    0: 'Wilayah Kesejahteraan Menengah dengan Inklusi Keuangan Tinggi',
-    1: 'Wilayah Kesejahteraan Rendah dengan Inklusi Keuangan Sedang',
-    2: 'Wilayah Kesejahteraan Sangat Rendah dengan Inklusi Keuangan Rendah',
-    3: 'Wilayah Kesejahteraan Tinggi dengan Inklusi Keuangan Tinggi - Pusat Ekonomi'
+    0: 'Wilayah Maju/Kota Besar',
+    1: 'Wilayah Berkembang dengan Tantangan Kemiskinan',
+    2: 'Wilayah Tertinggal',
+    3: 'Wilayah Menengah/Transisi'
 }
 
 # Baca data
@@ -51,7 +51,7 @@ try:
         geojson_data = json.load(f)
 
     # Judul Dashboard
-    st.title("Dashboard Analisis Cluster Inklusi Keuangan Terhadap Kesejahteraan Masyarakat Sumatera Utara 2019-2023")
+    st.title("Dashboard Analisis Cluster Inklusi Keuangan Terhadap Kesejahteraan Masyarakat Sumatera Utara")
     st.write("Periode 2019-2023")
 
     # Buat layout dengan 2 kolom
