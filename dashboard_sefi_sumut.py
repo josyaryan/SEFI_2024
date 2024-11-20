@@ -4,7 +4,7 @@ import folium
 from streamlit_folium import folium_static
 import json
 from branca.colormap import LinearColormap
-from folium.features import FloatImage
+from branca.element import Figure, Element
 
 # Konfigurasi awal dashboard
 st.set_page_config(
@@ -113,34 +113,44 @@ with tab1:
             # Filter data tahun terpilih
             year_data = data[data['tahun'] == selected_year]
 
-            # Buat HTML untuk legend
+            # Add legend html
             legend_html = '''
-            <div style="background-color: white; padding: 10px; border-radius: 5px; border: 2px solid gray;">
-                <p style="text-align: center; font-weight: bold;">Keterangan</p>
-                <div style="display: flex; align-items: center; margin: 5px;">
-                    <div style="background: #4D96FF; width: 20px; height: 20px; margin-right: 5px; border: 1px solid #666;"></div>
-                    <p style="margin: 0; font-size: 12px;">Wilayah Maju/Kota Besar</p>
-                </div>
-                <div style="display: flex; align-items: center; margin: 5px;">
-                    <div style="background: #FFD93D; width: 20px; height: 20px; margin-right: 5px; border: 1px solid #666;"></div>
-                    <p style="margin: 0; font-size: 12px;">Wilayah Berkembang dengan Tantangan Kemiskinan</p>
-                </div>
-                <div style="display: flex; align-items: center; margin: 5px;">
-                    <div style="background: #FF6B6B; width: 20px; height: 20px; margin-right: 5px; border: 1px solid #666;"></div>
-                    <p style="margin: 0; font-size: 12px;">Wilayah Tertinggal</p>
-                </div>
-                <div style="display: flex; align-items: center; margin: 5px;">
-                    <div style="background: #6BCB77; width: 20px; height: 20px; margin-right: 5px; border: 1px solid #666;"></div>
-                    <p style="margin: 0; font-size: 12px;">Wilayah Menengah/Transisi</p>
+            <div style="
+                position: fixed; 
+                bottom: 50px;
+                right: 50px;
+                width: 250px;
+                height: auto;
+                background-color: white;
+                border:2px solid grey;
+                z-index: 1000;
+                padding: 10px;
+                border-radius: 5px;
+                ">
+                <p style="margin-bottom: 10px; font-weight: bold;">Keterangan:</p>
+                <div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: #4D96FF; width: 20px; height: 20px; margin-right: 10px; border: 1px solid #666;"></div>
+                        <span>Wilayah Maju/Kota Besar</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: #FFD93D; width: 20px; height: 20px; margin-right: 10px; border: 1px solid #666;"></div>
+                        <span>Wilayah Berkembang dengan Tantangan Kemiskinan</span>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: #FF6B6B; width: 20px; height: 20px; margin-right: 10px; border: 1px solid #666;"></div>
+                        <span>Wilayah Tertinggal</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <div style="background: #6BCB77; width: 20px; height: 20px; margin-right: 10px; border: 1px solid #666;"></div>
+                        <span>Wilayah Menengah/Transisi</span>
+                    </div>
                 </div>
             </div>
             '''
 
-            # Tambahkan legend sebagai control ke peta
-            folium.LayerControl().add_to(m)
-
-            # Tambahkan legend HTML ke peta menggunakan FloatImage
-            FloatImage(legend_html, bottom=70, left=70).add_to(m)
+            # Add the legend to the map
+            m.get_root().html.add_child(Element(legend_html))
             
             # Tambahkan popup dengan informasi detail
             for feature in geojson_data['features']:
