@@ -50,6 +50,7 @@ st.markdown("""
         text-align: center;
         margin-bottom: 40px;
         font-weight: 500;
+        color: #FF6B6B;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -160,45 +161,43 @@ with tab1:
                         )
                     ).add_to(m)
 
-            # Simplified legend with just color boxes and descriptions
+            # Add color legend
             legend_html = """
-            <div style="position: fixed; 
-                        bottom: 50px; 
-                        left: 50px; 
-                        z-index: 1000; 
-                        background-color: white; 
-                        padding: 20px;
-                        border: 2px solid grey; 
-                        border-radius: 5px;
-                        font-family: Arial, sans-serif;
-                        box-shadow: 0 0 15px rgba(0,0,0,0.2);">
-                <div style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">Keterangan:</div>
-                <div style="display: grid; gap: 12px;">
-                    <div style="display: flex; align-items: center;">
-                        <div style="width: 24px; height: 24px; background-color: #4D96FF; margin-right: 12px; border: 1px solid #666;"></div>
-                        <span style="font-size: 14px;">Wilayah Maju/Kota Besar</span>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <div style="width: 24px; height: 24px; background-color: #FFD93D; margin-right: 12px; border: 1px solid #666;"></div>
-                        <span style="font-size: 14px;">Wilayah Berkembang dengan Tantangan Kemiskinan</span>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <div style="width: 24px; height: 24px; background-color: #FF6B6B; margin-right: 12px; border: 1px solid #666;"></div>
-                        <span style="font-size: 14px;">Wilayah Tertinggal</span>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <div style="width: 24px; height: 24px; background-color: #6BCB77; margin-right: 12px; border: 1px solid #666;"></div>
-                        <span style="font-size: 14px;">Wilayah Menengah/Transisi</span>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; font-size: 11px; color: #666;">
-                    <hr style="margin: 10px 0;">
-                    Sumber: Analisis Data SEFI 2024
-                </div>
+            <div style="
+                position: fixed;
+                bottom: 50px;
+                right: 50px;
+                width: auto;
+                height: auto;
+                background-color: white;
+                padding: 10px;
+                border-radius: 5px;
+                border: 2px solid gray;
+                z-index: 9999;
+            ">
+                <div style="margin-bottom: 5px"><b>Keterangan:</b></div>
+                <table>
+                    <tr>
+                        <td><div style="width: 20px; height: 20px; background-color: #4D96FF; border: 1px solid #666; display: inline-block;"></div></td>
+                        <td style="padding-left: 10px">Wilayah Maju/Kota Besar</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 20px; height: 20px; background-color: #FFD93D; border: 1px solid #666; display: inline-block;"></div></td>
+                        <td style="padding-left: 10px">Wilayah Berkembang dengan Tantangan Kemiskinan</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 20px; height: 20px; background-color: #FF6B6B; border: 1px solid #666; display: inline-block;"></div></td>
+                        <td style="padding-left: 10px">Wilayah Tertinggal</td>
+                    </tr>
+                    <tr>
+                        <td><div style="width: 20px; height: 20px; background-color: #6BCB77; border: 1px solid #666; display: inline-block;"></div></td>
+                        <td style="padding-left: 10px">Wilayah Menengah/Transisi</td>
+                    </tr>
+                </table>
             </div>
             """
-
-            # Tambahkan legend ke peta
+            
+            # Pastikan legend ditambahkan ke peta
             m.get_root().html.add_child(folium.Element(legend_html))
             
             # Tampilkan peta
