@@ -4,6 +4,7 @@ import folium
 from streamlit_folium import folium_static
 import json
 from branca.colormap import LinearColormap
+from branca.element import Template, MacroElement
 
 # Konfigurasi awal dashboard
 st.set_page_config(
@@ -112,6 +113,49 @@ with tab1:
             # Filter data tahun terpilih
             year_data = data[data['tahun'] == selected_year]
             
+            # Create the legend as a macro
+            legend_macro = MacroElement()
+            legend_macro._name = 'legend'
+
+            # Create the legend HTML
+            legend_macro.template = Template("""
+                {% macro html(this, kwargs) %}
+                <div style="
+                    position: fixed; 
+                    right: 50px; 
+                    top: 50px;
+                    z-index: 1000;
+                    background-color: white;
+                    padding: 10px;
+                    border: 2px solid gray;
+                    border-radius: 5px;
+                    font-family: Arial, sans-serif;
+                    opacity: 0.9;
+                ">
+                    <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px;">Keterangan:</div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: #4D96FF; width: 20px; height: 20px; margin-right: 10px; border: 1px solid #666;"></div>
+                        <div>Wilayah Maju/Kota Besar</div>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: #FFD93D; width: 20px; height: 20px; margin-right: 10px; border: 1px solid #666;"></div>
+                        <div>Wilayah Berkembang dengan Tantangan Kemiskinan</div>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: #FF6B6B; width: 20px; height: 20px; margin-right: 10px; border: 1px solid #666;"></div>
+                        <div>Wilayah Tertinggal</div>
+                    </div>
+                    <div style="display: flex; align-items: center; margin-bottom: 5px;">
+                        <div style="background: #6BCB77; width: 20px; height: 20px; margin-right: 10px; border: 1px solid #666;"></div>
+                        <div>Wilayah Menengah/Transisi</div>
+                    </div>
+                </div>
+                {% endmacro %}
+            """)
+
+            # Add the legend to the map
+            m.get_root().add_child(legend_macro)
+            
             # Tambahkan popup dengan informasi detail
             for feature in geojson_data['features']:
                 kabupaten = feature['properties']['nmkab']
@@ -160,45 +204,6 @@ with tab1:
                             style='background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 10px;'
                         )
                     ).add_to(m)
-
-            # Add color legend
-            legend_html = """
-            <div style="
-                position: fixed;
-                bottom: 50px;
-                right: 50px;
-                width: auto;
-                height: auto;
-                background-color: white;
-                padding: 10px;
-                border-radius: 5px;
-                border: 2px solid gray;
-                z-index: 9999;
-            ">
-                <div style="margin-bottom: 5px"><b>Keterangan:</b></div>
-                <table>
-                    <tr>
-                        <td><div style="width: 20px; height: 20px; background-color: #4D96FF; border: 1px solid #666; display: inline-block;"></div></td>
-                        <td style="padding-left: 10px">Wilayah Maju/Kota Besar</td>
-                    </tr>
-                    <tr>
-                        <td><div style="width: 20px; height: 20px; background-color: #FFD93D; border: 1px solid #666; display: inline-block;"></div></td>
-                        <td style="padding-left: 10px">Wilayah Berkembang dengan Tantangan Kemiskinan</td>
-                    </tr>
-                    <tr>
-                        <td><div style="width: 20px; height: 20px; background-color: #FF6B6B; border: 1px solid #666; display: inline-block;"></div></td>
-                        <td style="padding-left: 10px">Wilayah Tertinggal</td>
-                    </tr>
-                    <tr>
-                        <td><div style="width: 20px; height: 20px; background-color: #6BCB77; border: 1px solid #666; display: inline-block;"></div></td>
-                        <td style="padding-left: 10px">Wilayah Menengah/Transisi</td>
-                    </tr>
-                </table>
-            </div>
-            """
-            
-            # Pastikan legend ditambahkan ke peta
-            m.get_root().html.add_child(folium.Element(legend_html))
             
             # Tampilkan peta
             folium_static(m)
