@@ -33,21 +33,23 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 st.markdown("""
     <style>
     .main-title {
-        font-size: 32px;
+        font-size: 48px;
         font-weight: bold;
         text-align: center;
-        margin-bottom: 5px;
+        margin-bottom: 10px;
+        color: #1f1f1f;
     }
     .sub-title {
-        font-size: 24px;
+        font-size: 32px;
         text-align: center;
         color: #666;
-        margin-bottom: 20px;
+        margin-bottom: 25px;
     }
     .period-text {
-        font-size: 20px;
+        font-size: 28px;
         text-align: center;
-        margin-bottom: 30px;
+        margin-bottom: 40px;
+        font-weight: 500;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -109,14 +111,6 @@ with tab1:
             # Filter data tahun terpilih
             year_data = data[data['tahun'] == selected_year]
             
-            # Tambahkan color scale
-            colormap = LinearColormap(
-                colors=['#4D96FF', '#FFD93D', '#FF6B6B', '#6BCB77'],
-                vmin=0,
-                vmax=3
-            )
-            m.add_child(colormap)
-            
             # Tambahkan popup dengan informasi detail
             for feature in geojson_data['features']:
                 kabupaten = feature['properties']['nmkab']
@@ -166,73 +160,41 @@ with tab1:
                         )
                     ).add_to(m)
 
-            # Legend dengan deskripsi yang lebih lengkap
+            # Simplified legend with just color boxes and descriptions
             legend_html = """
             <div style="position: fixed; 
                         bottom: 50px; 
                         left: 50px; 
                         z-index: 1000; 
                         background-color: white; 
-                        padding: 15px;
+                        padding: 20px;
                         border: 2px solid grey; 
                         border-radius: 5px;
                         font-family: Arial, sans-serif;
                         box-shadow: 0 0 15px rgba(0,0,0,0.2);">
-                <h4 style="margin-bottom: 10px; color: #333;">Keterangan Cluster:</h4>
-            """
-
-            # Informasi untuk setiap cluster
-            cluster_info = [
-                {
-                    'color': '#4D96FF',
-                    'number': 0,
-                    'label': 'Wilayah Maju/Kota Besar',
-                    'description': 'Wilayah maju dengan infrastruktur keuangan terbaik, IPM tinggi, dan kemiskinan rendah'
-                },
-                {
-                    'color': '#FFD93D',
-                    'number': 1,
-                    'label': 'Wilayah Berkembang dengan Tantangan Kemiskinan',
-                    'description': 'Wilayah berkembang dengan tantangan kemiskinan signifikan'
-                },
-                {
-                    'color': '#FF6B6B',
-                    'number': 2,
-                    'label': 'Wilayah Tertinggal',
-                    'description': 'Wilayah tertinggal dengan infrastruktur terbatas dan kemiskinan tinggi'
-                },
-                {
-                    'color': '#6BCB77',
-                    'number': 3,
-                    'label': 'Wilayah Menengah/Transisi',
-                    'description': 'Wilayah transisi dengan pertumbuhan ekonomi baik dan indikator terkendali'
-                }
-            ]
-
-            for info in cluster_info:
-                legend_html += f"""
-                <div style="margin-bottom: 8px;">
+                <div style="font-size: 16px; font-weight: bold; margin-bottom: 15px;">Keterangan:</div>
+                <div style="display: grid; gap: 12px;">
                     <div style="display: flex; align-items: center;">
-                        <div style="display: inline-block; 
-                                    width: 20px; 
-                                    height: 20px; 
-                                    background-color: {info['color']}; 
-                                    margin-right: 8px;
-                                    border: 1px solid #666;"></div>
-                        <div>
-                            <strong>Cluster {info['number']}: {info['label']}</strong>
-                            <br>
-                            <small style="color: #666;">{info['description']}</small>
-                        </div>
+                        <div style="width: 24px; height: 24px; background-color: #4D96FF; margin-right: 12px; border: 1px solid #666;"></div>
+                        <span style="font-size: 14px;">Wilayah Maju/Kota Besar</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 24px; height: 24px; background-color: #FFD93D; margin-right: 12px; border: 1px solid #666;"></div>
+                        <span style="font-size: 14px;">Wilayah Berkembang dengan Tantangan Kemiskinan</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 24px; height: 24px; background-color: #FF6B6B; margin-right: 12px; border: 1px solid #666;"></div>
+                        <span style="font-size: 14px;">Wilayah Tertinggal</span>
+                    </div>
+                    <div style="display: flex; align-items: center;">
+                        <div style="width: 24px; height: 24px; background-color: #6BCB77; margin-right: 12px; border: 1px solid #666;"></div>
+                        <span style="font-size: 14px;">Wilayah Menengah/Transisi</span>
                     </div>
                 </div>
-                """
-
-            legend_html += """
-            <div style="margin-top: 10px; font-size: 11px; color: #666;">
-                <hr style="margin: 5px 0;">
-                Sumber: Analisis Data SEFI 2024
-            </div>
+                <div style="margin-top: 15px; font-size: 11px; color: #666;">
+                    <hr style="margin: 10px 0;">
+                    Sumber: Analisis Data SEFI 2024
+                </div>
             </div>
             """
 
