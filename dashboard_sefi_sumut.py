@@ -33,24 +33,21 @@ st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 st.markdown("""
     <style>
     .main-title {
-        font-size: 48px;
+        font-size: 32px;
         font-weight: bold;
         text-align: center;
-        margin-bottom: 10px;
-        color: #1f1f1f;
+        margin-bottom: 5px;
     }
     .sub-title {
-        font-size: 32px;
+        font-size: 24px;
         text-align: center;
         color: #666;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
     }
     .period-text {
-        font-size: 28px;
+        font-size: 20px;
         text-align: center;
-        margin-bottom: 40px;
-        font-weight: 500;
-        color: #FF6B6B;
+        margin-bottom: 30px;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -112,6 +109,14 @@ with tab1:
             # Filter data tahun terpilih
             year_data = data[data['tahun'] == selected_year]
             
+            # Tambahkan color scale
+            colormap = LinearColormap(
+                colors=['#4D96FF', '#FFD93D', '#FF6B6B', '#6BCB77'],
+                vmin=0,
+                vmax=3
+            )
+            m.add_child(colormap)
+            
             # Tambahkan popup dengan informasi detail
             for feature in geojson_data['features']:
                 kabupaten = feature['properties']['nmkab']
@@ -161,39 +166,73 @@ with tab1:
                         )
                     ).add_to(m)
 
-            # Legend HTML yang lebih sederhana
+            # Legend dengan deskripsi yang lebih lengkap
             legend_html = """
-            <div style="
-                position: fixed; 
-                bottom: 50px; 
-                right: 50px; 
-                z-index: 9999; 
-                background-color: white; 
-                padding: 10px;
-                border: 2px solid grey;
-                border-radius: 5px;
-                font-size: 14px;
-                max-width: 300px;
-            ">
-                <p style="text-align: center; font-weight: bold; margin-bottom: 10px;">Keterangan</p>
-                <div style="display: grid; grid-gap: 8px;">
+            <div style="position: fixed; 
+                        bottom: 50px; 
+                        left: 50px; 
+                        z-index: 1000; 
+                        background-color: white; 
+                        padding: 15px;
+                        border: 2px solid grey; 
+                        border-radius: 5px;
+                        font-family: Arial, sans-serif;
+                        box-shadow: 0 0 15px rgba(0,0,0,0.2);">
+                <h4 style="margin-bottom: 10px; color: #333;">Keterangan Cluster:</h4>
+            """
+
+            # Informasi untuk setiap cluster
+            cluster_info = [
+                {
+                    'color': '#4D96FF',
+                    'number': 0,
+                    'label': 'Wilayah Maju/Kota Besar',
+                    'description': 'Wilayah maju dengan infrastruktur keuangan terbaik, IPM tinggi, dan kemiskinan rendah'
+                },
+                {
+                    'color': '#FFD93D',
+                    'number': 1,
+                    'label': 'Wilayah Berkembang dengan Tantangan Kemiskinan',
+                    'description': 'Wilayah berkembang dengan tantangan kemiskinan signifikan'
+                },
+                {
+                    'color': '#FF6B6B',
+                    'number': 2,
+                    'label': 'Wilayah Tertinggal',
+                    'description': 'Wilayah tertinggal dengan infrastruktur terbatas dan kemiskinan tinggi'
+                },
+                {
+                    'color': '#6BCB77',
+                    'number': 3,
+                    'label': 'Wilayah Menengah/Transisi',
+                    'description': 'Wilayah transisi dengan pertumbuhan ekonomi baik dan indikator terkendali'
+                }
+            ]
+
+            for info in cluster_info:
+                legend_html += f"""
+                <div style="margin-bottom: 8px;">
                     <div style="display: flex; align-items: center;">
-                        <div style="min-width: 30px; height: 30px; background-color: #4D96FF; border: 1px solid #666; margin-right: 10px;"></div>
-                        <span>Wilayah Maju/Kota Besar</span>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <div style="min-width: 30px; height: 30px; background-color: #FFD93D; border: 1px solid #666; margin-right: 10px;"></div>
-                        <span>Wilayah Berkembang dengan Tantangan Kemiskinan</span>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <div style="min-width: 30px; height: 30px; background-color: #FF6B6B; border: 1px solid #666; margin-right: 10px;"></div>
-                        <span>Wilayah Tertinggal</span>
-                    </div>
-                    <div style="display: flex; align-items: center;">
-                        <div style="min-width: 30px; height: 30px; background-color: #6BCB77; border: 1px solid #666; margin-right: 10px;"></div>
-                        <span>Wilayah Menengah/Transisi</span>
+                        <div style="display: inline-block; 
+                                    width: 20px; 
+                                    height: 20px; 
+                                    background-color: {info['color']}; 
+                                    margin-right: 8px;
+                                    border: 1px solid #666;"></div>
+                        <div>
+                            <strong>Cluster {info['number']}: {info['label']}</strong>
+                            <br>
+                            <small style="color: #666;">{info['description']}</small>
+                        </div>
                     </div>
                 </div>
+                """
+
+            legend_html += """
+            <div style="margin-top: 10px; font-size: 11px; color: #666;">
+                <hr style="margin: 5px 0;">
+                Sumber: Analisis Data SEFI 2024
+            </div>
             </div>
             """
 
