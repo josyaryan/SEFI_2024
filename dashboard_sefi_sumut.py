@@ -108,15 +108,7 @@ with tab1:
             
             # Filter data tahun terpilih
             year_data = data[data['tahun'] == selected_year]
-            
-            # Tambahkan color scale
-            colormap = LinearColormap(
-                colors=['#4D96FF', '#FFD93D', '#FF6B6B', '#6BCB77'],
-                vmin=0,
-                vmax=3
-            )
-            m.add_child(colormap)
-            
+
             # Tambahkan popup dengan informasi detail
             for feature in geojson_data['features']:
                 kabupaten = feature['properties']['nmkab']
@@ -166,75 +158,69 @@ with tab1:
                         )
                     ).add_to(m)
 
-            # Legend dengan deskripsi yang lebih lengkap
+            # Legend baru dengan box style
             legend_html = """
-            <div style="position: fixed; 
-                        bottom: 50px; 
-                        left: 50px; 
-                        z-index: 1000; 
-                        background-color: white; 
-                        padding: 15px;
-                        border: 2px solid grey; 
-                        border-radius: 5px;
-                        font-family: Arial, sans-serif;
-                        box-shadow: 0 0 15px rgba(0,0,0,0.2);">
-                <h4 style="margin-bottom: 10px; color: #333;">Keterangan Cluster:</h4>
+            <div style="
+                position: fixed; 
+                top: 10px;
+                right: 10px;
+                z-index: 1000;
+                background-color: white;
+                padding: 10px;
+                border: 2px solid #ccc;
+                border-radius: 5px;
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                max-width: 300px;
+            ">
+                <div style="margin-bottom: 5px;"><strong>Keterangan Cluster:</strong></div>
             """
 
             # Informasi untuk setiap cluster
             cluster_info = [
                 {
                     'color': '#4D96FF',
-                    'number': 0,
                     'label': 'Wilayah Maju/Kota Besar',
-                    'description': 'Wilayah maju dengan infrastruktur keuangan terbaik, IPM tinggi, dan kemiskinan rendah'
+                    'number': '0'
                 },
                 {
                     'color': '#FFD93D',
-                    'number': 1,
                     'label': 'Wilayah Berkembang dengan Tantangan Kemiskinan',
-                    'description': 'Wilayah berkembang dengan tantangan kemiskinan signifikan'
+                    'number': '1'
                 },
                 {
                     'color': '#FF6B6B',
-                    'number': 2,
                     'label': 'Wilayah Tertinggal',
-                    'description': 'Wilayah tertinggal dengan infrastruktur terbatas dan kemiskinan tinggi'
+                    'number': '2'
                 },
                 {
                     'color': '#6BCB77',
-                    'number': 3,
                     'label': 'Wilayah Menengah/Transisi',
-                    'description': 'Wilayah transisi dengan pertumbuhan ekonomi baik dan indikator terkendali'
+                    'number': '3'
                 }
             ]
 
             for info in cluster_info:
                 legend_html += f"""
-                <div style="margin-bottom: 8px;">
-                    <div style="display: flex; align-items: center;">
-                        <div style="display: inline-block; 
-                                    width: 20px; 
-                                    height: 20px; 
-                                    background-color: {info['color']}; 
-                                    margin-right: 8px;
-                                    border: 1px solid #666;"></div>
-                        <div>
-                            <strong>Cluster {info['number']}: {info['label']}</strong>
-                            <br>
-                            <small style="color: #666;">{info['description']}</small>
-                        </div>
-                    </div>
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 5px;
+                    padding: 2px;
+                ">
+                    <div style="
+                        width: 20px;
+                        height: 20px;
+                        background-color: {info['color']};
+                        margin-right: 8px;
+                        border: 1px solid #666;
+                    "></div>
+                    <div>Cluster {info['number']}: {info['label']}</div>
                 </div>
                 """
 
-            legend_html += """
-            <div style="margin-top: 10px; font-size: 11px; color: #666;">
-                <hr style="margin: 5px 0;">
-                Sumber: Analisis Data SEFI 2024
-            </div>
-            </div>
-            """
+            legend_html += "</div>"
 
             # Tambahkan legend ke peta
             m.get_root().html.add_child(folium.Element(legend_html))
