@@ -109,7 +109,7 @@ with tab1:
             # Filter data tahun terpilih
             year_data = data[data['tahun'] == selected_year]
 
-            # Tambahkan legend box di atas kiri
+            # Legend dengan style box vertikal
             legend_html = """
             <div style="
                 position: fixed; 
@@ -117,17 +117,17 @@ with tab1:
                 left: 60px;
                 z-index: 1000;
                 background-color: white;
-                padding: 10px;
-                border: 2px solid #ccc;
-                border-radius: 5px;
+                padding: 6px 8px;
+                border: 1px solid #999;
+                border-radius: 3px;
                 font-family: Arial, sans-serif;
                 font-size: 12px;
-                box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
             ">
-                <div style="display: flex; align-items: center;">
+                <div style="margin-bottom: 3px;"><strong>Cluster Level</strong></div>
+                <div>
             """
 
-            # Informasi untuk setiap cluster
             cluster_info = [
                 {
                     'color': '#4D96FF',
@@ -151,28 +151,22 @@ with tab1:
                 }
             ]
 
-            # Modifikasi cara menampilkan cluster dalam legend
             for info in cluster_info:
                 legend_html += f"""
-                <div style="
-                    display: flex;
-                    align-items: center;
-                    margin-right: 15px;
-                ">
+                <div style="display: flex; align-items: center; margin-bottom: 3px;">
                     <div style="
-                        width: 20px;
-                        height: 20px;
+                        width: 15px;
+                        height: 15px;
                         background-color: {info['color']};
                         margin-right: 5px;
                         border: 1px solid #666;
                     "></div>
-                    <div style="font-size: 11px;">{info['number']}</div>
+                    <span>Cluster {info['number']} - {info['label']}</span>
                 </div>
                 """
 
             legend_html += """
                 </div>
-                <div style="margin-top: 5px; font-size: 10px; color: #666;">Cluster Level</div>
             </div>
             """
 
