@@ -109,67 +109,51 @@ with tab1:
             # Filter data tahun terpilih
             year_data = data[data['tahun'] == selected_year]
 
-            # Legend baru dengan style yang diperbaiki
-            legend_html = """
-            <div style="
-                position: absolute;
-                top: 20px;
-                left: 50px;
-                z-index: 9999;
+            # Buat custom legend class
+            class LegendElement(folium.Element):
+                def __init__(self, html):
+                    super(LegendElement, self).__init__()
+                    self._name = 'CustomLegend'
+                    self.html = html
+                    
+                def render(self, **kwargs):
+                    return self.html
+
+            # Buat legend HTML
+            legend_html = '''
+             <div style="
+                position: fixed; 
+                top: 10px; 
+                left: 50px; 
+                width: auto;
                 background-color: white;
-                padding: 8px;
-                border: 1px solid rgba(0,0,0,0.2);
-                border-radius: 4px;
+                padding: 10px;
+                border: 2px solid rgba(0,0,0,0.2);
+                border-radius: 5px;
                 font-family: Arial, sans-serif;
                 font-size: 12px;
-                box-shadow: 0 1px 5px rgba(0,0,0,0.15);
-            ">
-                <div style="margin-bottom: 5px; font-weight: bold;">Legenda</div>
-            """
+                z-index: 9999;
+             ">
+                 <div style="margin-bottom: 5px;"><strong>Legenda</strong></div>
+            '''
 
-            # Informasi cluster
-            cluster_info = [
-                {'color': '#4D96FF', 'label': 'Wilayah Maju/Kota Besar'},
-                {'color': '#FFD93D', 'label': 'Wilayah Berkembang dengan Tantangan Kemiskinan'},
-                {'color': '#FF6B6B', 'label': 'Wilayah Tertinggal'},
-                {'color': '#6BCB77', 'label': 'Wilayah Menengah/Transisi'}
-            ]
-
-            # Tambahkan setiap item ke legend
-            for i, info in enumerate(cluster_info):
-                legend_html += f"""
-                <div style="
-                    display: flex;
-                    align-items: center;
-                    margin-bottom: 4px;
-                    white-space: nowrap;
-                ">
+            for i, (cluster, label) in enumerate(cluster_labels.items()):
+                legend_html += f'''
+                 <div style="display: flex; align-items: center; margin-bottom: 3px;">
                     <div style="
-                        width: 16px;
-                        height: 16px;
-                        background-color: {info['color']};
-                        margin-right: 8px;
+                        width: 20px;
+                        height: 20px;
+                        background: {cluster_colors[cluster]};
+                        margin-right: 5px;
                         border: 1px solid #666;
                     "></div>
-                    <div>Cluster {i} ({info['label']})</div>
-                </div>
-                """
+                    <span>Cluster {cluster}</span>
+                 </div>'''
 
-            legend_html += "</div>"
+            legend_html += '</div>'
 
-            # Tambahkan style dan legend ke peta
-            m.get_root().html.add_child(folium.Element(f"""
-                <style>
-                .legend {{
-                    background-color: white;
-                    position: absolute;
-                    z-index: 9999;
-                    top: 10px;
-                    left: 50px;
-                }}
-                </style>
-                {legend_html}
-            """))
+            # Tambahkan legend ke peta
+            m.get_root().html.add_child(LegendElement(legend_html))
 
             # Tambahkan popup dengan informasi detail
             for feature in geojson_data['features']:
