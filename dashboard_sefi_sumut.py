@@ -108,53 +108,15 @@ with tab1:
             
             # Filter data tahun terpilih
             year_data = data[data['tahun'] == selected_year]
-
-            # Buat custom legend class
-            class LegendElement(folium.Element):
-                def __init__(self, html):
-                    super(LegendElement, self).__init__()
-                    self._name = 'CustomLegend'
-                    self.html = html
-                    
-                def render(self, **kwargs):
-                    return self.html
-
-            # Buat legend HTML
-            legend_html = '''
-             <div style="
-                position: fixed; 
-                top: 10px; 
-                left: 50px; 
-                width: auto;
-                background-color: white;
-                padding: 10px;
-                border: 2px solid rgba(0,0,0,0.2);
-                border-radius: 5px;
-                font-family: Arial, sans-serif;
-                font-size: 12px;
-                z-index: 9999;
-             ">
-                 <div style="margin-bottom: 5px;"><strong>Legenda</strong></div>
-            '''
-
-            for i, (cluster, label) in enumerate(cluster_labels.items()):
-                legend_html += f'''
-                 <div style="display: flex; align-items: center; margin-bottom: 3px;">
-                    <div style="
-                        width: 20px;
-                        height: 20px;
-                        background: {cluster_colors[cluster]};
-                        margin-right: 5px;
-                        border: 1px solid #666;
-                    "></div>
-                    <span>Cluster {cluster}</span>
-                 </div>'''
-
-            legend_html += '</div>'
-
-            # Tambahkan legend ke peta
-            m.get_root().html.add_child(LegendElement(legend_html))
-
+            
+            # Tambahkan color scale
+            colormap = LinearColormap(
+                colors=['#4D96FF', '#FFD93D', '#FF6B6B', '#6BCB77'],
+                vmin=0,
+                vmax=3
+            )
+            m.add_child(colormap)
+            
             # Tambahkan popup dengan informasi detail
             for feature in geojson_data['features']:
                 kabupaten = feature['properties']['nmkab']
@@ -203,6 +165,79 @@ with tab1:
                             style='background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 10px;'
                         )
                     ).add_to(m)
+
+            # Legend dengan deskripsi yang lebih lengkap
+            legend_html = """
+            <div style="position: fixed; 
+                        bottom: 50px; 
+                        left: 50px; 
+                        z-index: 1000; 
+                        background-color: white; 
+                        padding: 15px;
+                        border: 2px solid grey; 
+                        border-radius: 5px;
+                        font-family: Arial, sans-serif;
+                        box-shadow: 0 0 15px rgba(0,0,0,0.2);">
+                <h4 style="margin-bottom: 10px; color: #333;">Keterangan Cluster:</h4>
+            """
+
+            # Informasi untuk setiap cluster
+            cluster_info = [
+                {
+                    'color': '#4D96FF',
+                    'number': 0,
+                    'label': 'Wilayah Maju/Kota Besar',
+                    'description': 'Wilayah maju dengan infrastruktur keuangan terbaik, IPM tinggi, dan kemiskinan rendah'
+                },
+                {
+                    'color': '#FFD93D',
+                    'number': 1,
+                    'label': 'Wilayah Berkembang dengan Tantangan Kemiskinan',
+                    'description': 'Wilayah berkembang dengan tantangan kemiskinan signifikan'
+                },
+                {
+                    'color': '#FF6B6B',
+                    'number': 2,
+                    'label': 'Wilayah Tertinggal',
+                    'description': 'Wilayah tertinggal dengan infrastruktur terbatas dan kemiskinan tinggi'
+                },
+                {
+                    'color': '#6BCB77',
+                    'number': 3,
+                    'label': 'Wilayah Menengah/Transisi',
+                    'description': 'Wilayah transisi dengan pertumbuhan ekonomi baik dan indikator terkendali'
+                }
+            ]
+
+            for info in cluster_info:
+                legend_html += f"""
+                <div style="margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="display: inline-block; 
+                                    width: 20px; 
+                                    height: 20px; 
+                                    background-color: {info['color']}; 
+                                    margin-right: 8px;
+                                    border: 1px solid #666;"></div>
+                        <div>
+                            <strong>Cluster {info['number']}: {info['label']}</strong>
+                            <br>
+                            <small style="color: #666;">{info['description']}</small>
+                        </div>
+                    </div>
+                </div>
+                """
+
+            legend_html += """
+            <div style="margin-top: 10px; font-size: 11px; color: #666;">
+                <hr style="margin: 5px 0;">
+                Sumber: Analisis Data SEFI 2024
+            </div>
+            </div>
+            """
+
+            # Tambahkan legend ke peta
+            m.get_root().html.add_child(folium.Element(legend_html))
             
             # Tampilkan peta
             folium_static(m)
