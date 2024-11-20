@@ -168,6 +168,22 @@ with tab1:
 
             # Legend dengan deskripsi yang lebih lengkap
            # Informasi untuk setiap cluster
+# Legend dengan deskripsi yang lebih lengkap
+legend_html = """
+<div style="position: fixed; 
+            bottom: 50px; 
+            left: 50px; 
+            z-index: 1000; 
+            background-color: white; 
+            padding: 15px;
+            border: 2px solid grey; 
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);">
+    <h4 style="margin-bottom: 10px; color: #333;">Keterangan Cluster:</h4>
+"""
+
+# Informasi untuk setiap cluster
 cluster_info = [
     {
         'color': '#4D96FF',
