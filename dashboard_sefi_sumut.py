@@ -109,66 +109,67 @@ with tab1:
             # Filter data tahun terpilih
             year_data = data[data['tahun'] == selected_year]
 
-            # Legend dengan style box vertikal
+            # Legend baru dengan style yang diperbaiki
             legend_html = """
             <div style="
-                position: fixed; 
-                top: 10px;
-                left: 60px;
-                z-index: 1000;
+                position: absolute;
+                top: 20px;
+                left: 50px;
+                z-index: 9999;
                 background-color: white;
-                padding: 6px 8px;
-                border: 1px solid #999;
-                border-radius: 3px;
+                padding: 8px;
+                border: 1px solid rgba(0,0,0,0.2);
+                border-radius: 4px;
                 font-family: Arial, sans-serif;
                 font-size: 12px;
-                box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+                box-shadow: 0 1px 5px rgba(0,0,0,0.15);
             ">
-                <div style="margin-bottom: 3px;"><strong>Cluster Level</strong></div>
-                <div>
+                <div style="margin-bottom: 5px; font-weight: bold;">Legenda</div>
             """
 
+            # Informasi cluster
             cluster_info = [
-                {
-                    'color': '#4D96FF',
-                    'label': 'Wilayah Maju/Kota Besar',
-                    'number': '0'
-                },
-                {
-                    'color': '#FFD93D',
-                    'label': 'Wilayah Berkembang dengan Tantangan Kemiskinan',
-                    'number': '1'
-                },
-                {
-                    'color': '#FF6B6B',
-                    'label': 'Wilayah Tertinggal',
-                    'number': '2'
-                },
-                {
-                    'color': '#6BCB77',
-                    'label': 'Wilayah Menengah/Transisi',
-                    'number': '3'
-                }
+                {'color': '#4D96FF', 'label': 'Wilayah Maju/Kota Besar'},
+                {'color': '#FFD93D', 'label': 'Wilayah Berkembang dengan Tantangan Kemiskinan'},
+                {'color': '#FF6B6B', 'label': 'Wilayah Tertinggal'},
+                {'color': '#6BCB77', 'label': 'Wilayah Menengah/Transisi'}
             ]
 
-            for info in cluster_info:
+            # Tambahkan setiap item ke legend
+            for i, info in enumerate(cluster_info):
                 legend_html += f"""
-                <div style="display: flex; align-items: center; margin-bottom: 3px;">
+                <div style="
+                    display: flex;
+                    align-items: center;
+                    margin-bottom: 4px;
+                    white-space: nowrap;
+                ">
                     <div style="
-                        width: 15px;
-                        height: 15px;
+                        width: 16px;
+                        height: 16px;
                         background-color: {info['color']};
-                        margin-right: 5px;
+                        margin-right: 8px;
                         border: 1px solid #666;
                     "></div>
-                    <span>Cluster {info['number']} - {info['label']}</span>
+                    <div>Cluster {i} ({info['label']})</div>
                 </div>
                 """
 
-            legend_html += """
-                </div>
-            </div>
-            """
+            legend_html += "</div>"
+
+            # Tambahkan style dan legend ke peta
+            m.get_root().html.add_child(folium.Element(f"""
+                <style>
+                .legend {{
+                    background-color: white;
+                    position: absolute;
+                    z-index: 9999;
+                    top: 10px;
+                    left: 50px;
+                }}
+                </style>
+                {legend_html}
+            """))
 
             # Tambahkan popup dengan informasi detail
             for feature in geojson_data['features']:
@@ -218,9 +219,6 @@ with tab1:
                             style='background-color: white; color: #333333; font-family: arial; font-size: 12px; padding: 10px;'
                         )
                     ).add_to(m)
-
-            # Tambahkan legend ke peta
-            m.get_root().html.add_child(folium.Element(legend_html))
             
             # Tampilkan peta
             folium_static(m)
