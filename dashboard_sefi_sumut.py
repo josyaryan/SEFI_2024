@@ -167,79 +167,77 @@ with tab1:
                     ).add_to(m)
 
             # Legend dengan deskripsi yang lebih lengkap
-           # Informasi untuk setiap cluster
-# Legend dengan deskripsi yang lebih lengkap
-legend_html = """
-<div style="position: fixed; 
-            bottom: 50px; 
-            left: 50px; 
-            z-index: 1000; 
-            background-color: white; 
-            padding: 15px;
-            border: 2px solid grey; 
-            border-radius: 5px;
-            font-family: Arial, sans-serif;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2);">
-    <h4 style="margin-bottom: 10px; color: #333;">Keterangan Cluster:</h4>
-"""
+            legend_html = """
+            <div style="position: fixed; 
+                        bottom: 50px; 
+                        left: 50px; 
+                        z-index: 1000; 
+                        background-color: white; 
+                        padding: 15px;
+                        border: 2px solid grey; 
+                        border-radius: 5px;
+                        font-family: Arial, sans-serif;
+                        box-shadow: 0 0 15px rgba(0,0,0,0.2);">
+                <h4 style="margin-bottom: 10px; color: #333;">Keterangan Cluster:</h4>
+            """
 
-# Informasi untuk setiap cluster
-cluster_info = [
-    {
-        'color': '#4D96FF',
-        'number': 0,
-        'label': 'Wilayah Maju/Kota Besar',
-        'description': 'Wilayah maju dengan infrastruktur keuangan terbaik, IPM tinggi, dan kemiskinan rendah'
-    },
-    {
-        'color': '#FFD93D',
-        'number': 1,
-        'label': 'Wilayah Berkembang dengan Tantangan Kemiskinan',
-        'description': 'Wilayah berkembang dengan tantangan kemiskinan signifikan'
-    },
-    {
-        'color': '#FF6B6B',
-        'number': 2,
-        'label': 'Wilayah Tertinggal',
-        'description': 'Wilayah tertinggal dengan infrastruktur terbatas dan kemiskinan tinggi'
-    },
-    {
-        'color': '#6BCB77',
-        'number': 3,
-        'label': 'Wilayah Menengah/Transisi',
-        'description': 'Wilayah transisi dengan pertumbuhan ekonomi baik dan indikator terkendali'
-    }
-]
+            # Informasi untuk setiap cluster
+            cluster_info = [
+                {
+                    'color': '#4D96FF',
+                    'number': 0,
+                    'label': 'Wilayah Maju/Kota Besar',
+                    'description': 'Wilayah maju dengan infrastruktur keuangan terbaik, IPM tinggi, dan kemiskinan rendah'
+                },
+                {
+                    'color': '#FFD93D',
+                    'number': 1,
+                    'label': 'Wilayah Berkembang dengan Tantangan Kemiskinan',
+                    'description': 'Wilayah berkembang dengan tantangan kemiskinan signifikan'
+                },
+                {
+                    'color': '#FF6B6B',
+                    'number': 2,
+                    'label': 'Wilayah Tertinggal',
+                    'description': 'Wilayah tertinggal dengan infrastruktur terbatas dan kemiskinan tinggi'
+                },
+                {
+                    'color': '#6BCB77',
+                    'number': 3,
+                    'label': 'Wilayah Menengah/Transisi',
+                    'description': 'Wilayah transisi dengan pertumbuhan ekonomi baik dan indikator terkendali'
+                }
+            ]
 
-for info in cluster_info:
-    legend_html += f"""
-    <div style="margin-bottom: 8px;">
-        <div style="display: flex; align-items: center;">
-            <div style="display: inline-block; 
-                        width: 20px; 
-                        height: 20px; 
-                        background-color: {info['color']}; 
-                        margin-right: 8px;
-                        border: 1px solid #666;"></div>
-            <div>
-                <strong>Cluster {info['number']}: {info['label']}</strong>
-                <br>
-                <small style="color: #666;">{info['description']}</small>
+            for info in cluster_info:
+                legend_html += f"""
+                <div style="margin-bottom: 8px;">
+                    <div style="display: flex; align-items: center;">
+                        <div style="display: inline-block; 
+                                    width: 20px; 
+                                    height: 20px; 
+                                    background-color: {info['color']}; 
+                                    margin-right: 8px;
+                                    border: 1px solid #666;"></div>
+                        <div>
+                            <strong>Cluster {info['number']}: {info['label']}</strong>
+                            <br>
+                            <small style="color: #666;">{info['description']}</small>
+                        </div>
+                    </div>
+                </div>
+                """
+
+            legend_html += """
+            <div style="margin-top: 10px; font-size: 11px; color: #666;">
+                <hr style="margin: 5px 0;">
+                Sumber: Analisis Data SEFI 2024
             </div>
-        </div>
-    </div>
-    """
+            </div>
+            """
 
-legend_html += """
-<div style="margin-top: 10px; font-size: 11px; color: #666;">
-    <hr style="margin: 5px 0;">
-    Sumber: Analisis Data SEFI 2024
-</div>
-</div>
-"""
-
-# Tambahkan legend ke peta
-m.get_root().html.add_child(folium.Element(legend_html))
+            # Tambahkan legend ke peta
+            m.get_root().html.add_child(folium.Element(legend_html))
             
             # Tampilkan peta
             folium_static(m)
