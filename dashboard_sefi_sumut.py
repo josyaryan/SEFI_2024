@@ -108,6 +108,15 @@ with tab1:
             
             # Filter data tahun terpilih
             year_data = data[data['tahun'] == selected_year]
+            
+            # Tambahkan color scale
+            colormap = LinearColormap(
+                colors=['#4D96FF', '#FFD93D', '#FF6B6B', '#6BCB77'],
+                vmin=0,
+                vmax=3,
+                caption='Cluster Level'
+            )
+            m.add_child(colormap)
 
             # Tambahkan popup dengan informasi detail
             for feature in geojson_data['features']:
@@ -158,7 +167,7 @@ with tab1:
                         )
                     ).add_to(m)
 
-            # Legend baru dengan box style
+            # Legend box di kanan atas
             legend_html = """
             <div style="
                 position: fixed; 
