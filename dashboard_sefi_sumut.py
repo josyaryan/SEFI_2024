@@ -452,21 +452,22 @@ with tab2:
 
 # Tambahkan kode ini di dalam subtab2 setelah bagian Rekomendasi Kebijakan
 
-# What-If Analysis Section
-st.markdown("""
-### What-If Analysis
-
-Simulasi ini menggunakan model machine learning (Random Forest/Gradient Boosting) yang telah dilatih 
-dengan data 2019-2023, dengan mempertimbangkan karakteristik wilayah berdasarkan hasil 
-klasterisasi Gaussian Mixture Model.
-""")
-
 try:
-    data = pd.read_excel('hasil_cluster_sumut.xlsx')
-    
+    # What-If Analysis Section
+    st.markdown("""
+    ### What-If Analysis
+
+    Simulasikan dampak perubahan indikator inklusi keuangan terhadap kesejahteraan masyarakat di Sumatera Utara. 
+    Perubahan positif pada indikator inklusi keuangan akan:
+    - Menurunkan Persentase Penduduk Miskin (PPM) dan Tingkat Pengangguran (TPT)
+    - Meningkatkan IPM dan Pertumbuhan Ekonomi (PE)
+
+    Gunakan slider untuk mengubah nilai variabel dan lihat prediksi perubahannya.
+    """)
+
     # Buat layout dengan 2 kolom
     col1, col2 = st.columns(2)
-    
+
     with col1:
         # Pilihan klaster
         cluster_choice = st.selectbox(
@@ -478,7 +479,7 @@ try:
                 "Wilayah Menengah/Transisi (Cluster 3)"
             ]
         )
-        
+
         # Set baseline berdasarkan klaster
         cluster_map = {
             "Wilayah Maju/Kota Besar (Cluster 0)": 0,
@@ -486,11 +487,11 @@ try:
             "Wilayah Tertinggal (Cluster 2)": 2,
             "Wilayah Menengah/Transisi (Cluster 3)": 3
         }
-        
+
         selected_cluster = cluster_map[cluster_choice]
         data_2023 = data[data['tahun'] == 2023]
         cluster_data = data_2023[data_2023['Cluster'] == selected_cluster]
-        
+
         # Tampilkan karakteristik cluster
         st.info(f"""
         **Karakteristik {cluster_choice}:**
@@ -507,7 +508,7 @@ try:
         - IPM: {cluster_data['ipm'].mean():.2f}
         - Pertumbuhan Ekonomi: {cluster_data['pertumbuhan_ekonomi'].mean():.2f}%
         """)
-        
+
         # Input sliders
         st.subheader("Simulasi Perubahan")
         bank_change = st.slider(
@@ -517,7 +518,7 @@ try:
             value=0,
             help="Dampak: PPM (-50.59%), TPT (-19.61%), IPM (+25.20%), PE (+2.09%)"
         )
-        
+
         nonbank_change = st.slider(
             "Perubahan Jumlah Entitas Non-Bank (%)",
             min_value=-50,
@@ -525,7 +526,7 @@ try:
             value=0,
             help="Dampak: PPM (-9.19%), TPT (-57.34%), IPM (+56.24%), PE (+1.44%)"
         )
-        
+
         rekening_change = st.slider(
             "Perubahan Jumlah Rekening Kredit (%)",
             min_value=-50,
@@ -533,7 +534,7 @@ try:
             value=0,
             help="Dampak: PPM (-14.35%), TPT (-7.30%), IPM (+8.80%), PE (+1.62%)"
         )
-        
+
         kredit_change = st.slider(
             "Perubahan Penyaluran Kredit (%)",
             min_value=-50,
@@ -541,15 +542,21 @@ try:
             value=0,
             help="Dampak: PPM (-23.44%), TPT (-13.32%), IPM (+8.19%), PE (+1.68%)"
         )
-    
+
+        # Calculate changes
+        changes = {
+            'bank': bank_change/100,
+            'nonbank': nonbank_change/100,
+            'rekening': rekening_change/100,
+            'kredit': kredit_change/100
+        }
+
     with col2:
         st.subheader("Hasil Prediksi Model")
-        
-        # Load model yang sudah dilatih (ilustrasi)
-        # Dalam implementasi sebenarnya, load model RF/GB yang sudah dilatih
-        def predict_with_model(cluster_data, changes, target):
-            # Gunakan feature importance dari paper sebagai baseline
-            feature_importance = {
+
+        def predict_with_model(changes, target, baseline):
+            # Feature importance dari paper
+            weights = {
                 "PPM": {
                     'bank': -0.505923,
                     'nonbank': -0.091851,
@@ -575,163 +582,101 @@ try:
                     'kredit': 0.016814
                 }
             }
-            
-            # Hitung dampak berdasarkan karakteristik cluster
-            weights = feature_importance[target]
-            baseline = cluster_data[target.lower()].mean()
-            
+
+            # Hitung dampak
             impact = (
-                changes['bank'] * weights['bank'] +
-                changes['nonbank'] * weights['nonbank'] +
-                changes['rekening'] * weights['rekening'] +
-                changes['kredit'] * weights['kredit']
+                changes['bank'] * weights[target]['bank'] +
+                changes['nonbank'] * weights[target]['nonbank'] +
+                changes['rekening'] * weights[target]['rekening'] +
+                changes['kredit'] * weights[target]['kredit']
             )
-            
+
             # Sesuaikan dampak berdasarkan karakteristik cluster
             if selected_cluster == 0:  # Wilayah Maju
-                impact *= 0.8  # Dampak lebih kecil karena sudah maju
+                impact *= 0.8
             elif selected_cluster == 2:  # Wilayah Tertinggal
-                impact *= 1.2  # Dampak lebih besar karena potensi catchup
-                
-            predicted = baseline * (1 + impact)
-            
+                impact *= 1.2
+
+            # Hitung prediksi
+            if target in ["PPM", "TPT"]:
+                predicted = baseline * (1 - impact)
+            else:
+                predicted = baseline * (1 + impact)
+
             return predicted, impact * 100
-        
-        # Calculate predictions
-        changes = {
-            'bank': bank_change/100,
-            'nonbank': nonbank_change/100,
-            'rekening': rekening_change/100,
-            'kredit': kredit_change/100
-        }
-        
-        # Perbaiki mapping nama variabel
-var_mapping = {
-    "PPM": "persentase_penduduk_miskin",
-    "TPT": "tingkat_pengangguran",
-    "IPM": "ipm",
-    "PE": "pertumbuhan_ekonomi"
-}
 
-def predict_with_model(cluster_data, changes, target):
-    # Feature importance dari paper
-    weights = {
-        "PPM": {
-            'bank': -0.505923,
-            'nonbank': -0.091851,
-            'rekening': -0.143531,
-            'kredit': -0.234412
-        },
-        "TPT": {
-            'bank': -0.196143,
-            'nonbank': -0.573377,
-            'rekening': -0.073034,
-            'kredit': -0.133190
-        },
-        "IPM": {
-            'bank': 0.251957,
-            'nonbank': 0.562416,
-            'rekening': 0.087972,
-            'kredit': 0.081940
-        },
-        "PE": {
-            'bank': 0.020925,
-            'nonbank': 0.014357,
-            'rekening': 0.016221,
-            'kredit': 0.016814
+        # Get predictions for each target
+        targets = {
+            "PPM": cluster_data['persentase_penduduk_miskin'].mean(),
+            "TPT": cluster_data['tingkat_pengangguran'].mean(),
+            "IPM": cluster_data['ipm'].mean(),
+            "PE": cluster_data['pertumbuhan_ekonomi'].mean()
         }
-    }
-    
-    # Ambil nilai baseline menggunakan mapping yang benar
-    baseline = cluster_data[var_mapping[target]].mean()
-    
-    # Hitung dampak
-    impact = (
-        changes['bank'] * weights[target]['bank'] +
-        changes['nonbank'] * weights[target]['nonbank'] +
-        changes['rekening'] * weights[target]['rekening'] +
-        changes['kredit'] * weights[target]['kredit']
-    )
-    
-    # Sesuaikan dampak berdasarkan karakteristik cluster
-    if selected_cluster == 0:  # Wilayah Maju
-        impact *= 0.8  # Dampak lebih kecil karena sudah maju
-    elif selected_cluster == 2:  # Wilayah Tertinggal
-        impact *= 1.2  # Dampak lebih besar karena potensi catchup
-    
-    # Hitung prediksi
-    if target in ["PPM", "TPT"]:  # Untuk indikator yang seharusnya turun
-        predicted = baseline * (1 - impact)
-    else:  # Untuk IPM dan PE yang seharusnya naik
-        predicted = baseline * (1 + impact)
-    
-    return predicted, impact * 100
 
-# Gunakan fungsi untuk prediksi
-predictions = {}
-for target in ["PPM", "TPT", "IPM", "PE"]:
-    pred_value, impact = predict_with_model(cluster_data, changes, target)
-    predictions[target] = {"value": pred_value, "change": impact}
-    
-    # Display metrics dengan konteks cluster
-    st.metric(
-        f"Prediksi {target}", 
-        f"{pred_value:.2f}{'%' if target != 'IPM' else ''}",
-        f"{impact:.2f}%",
-        help=f"Perubahan dari baseline cluster {selected_cluster}"
-    )
-        
-        # Visualisasi
+        predictions = {}
+        for target, baseline in targets.items():
+            pred_value, impact = predict_with_model(changes, target, baseline)
+            predictions[target] = {"value": pred_value, "change": impact}
+
+            # Display metrics
+            st.metric(
+                f"Prediksi {target}", 
+                f"{pred_value:.2f}{'%' if target != 'IPM' else ''}",
+                f"{impact:.2f}%",
+                help=f"Perubahan dari baseline cluster {selected_cluster}"
+            )
+
+        # Visualization
         fig = go.Figure()
-        
+
         variables = list(predictions.keys())
-        baseline_values = [cluster_data[var_mapping[var]].mean() for var in variables]
+        baseline_values = [targets[var] for var in variables]
         predicted_values = [predictions[var]['value'] for var in variables]
-        
+
         fig.add_trace(go.Bar(
             name=f'Baseline Cluster {selected_cluster}',
             x=variables,
             y=baseline_values,
             marker_color='#4D96FF'
         ))
-        
+
         fig.add_trace(go.Bar(
             name='Prediksi',
             x=variables,
             y=predicted_values,
             marker_color='#6BCB77'
         ))
-        
+
         fig.update_layout(
             title=f'Perbandingan Baseline vs Prediksi (Cluster {selected_cluster})',
             barmode='group',
             height=400
         )
-        
+
         st.plotly_chart(fig, use_container_width=True)
-        
-        # Interpretasi berdasarkan cluster
+
+        # Interpretasi
         st.markdown("### Interpretasi Hasil")
         st.write(f"""
         **Analisis untuk {cluster_choice}:**
-        
+
         1. **Persentase Penduduk Miskin:**
-           - Baseline: {cluster_data['persentase_penduduk_miskin'].mean():.2f}% → Prediksi: {predictions['PPM']['value']:.2f}%
+           - Baseline: {targets['PPM']:.2f}% → Prediksi: {predictions['PPM']['value']:.2f}%
            - Perubahan: {predictions['PPM']['change']:.2f}%
            - {'Dampak lebih signifikan karena kondisi awal yang tertinggal' if selected_cluster == 2 else 'Dampak moderat karena sudah memiliki infrastruktur yang baik' if selected_cluster == 0 else 'Dampak sesuai dengan karakteristik wilayah'}
 
         2. **Tingkat Pengangguran:**
-           - Baseline: {cluster_data['tingkat_pengangguran'].mean():.2f}% → Prediksi: {predictions['TPT']['value']:.2f}%
+           - Baseline: {targets['TPT']:.2f}% → Prediksi: {predictions['TPT']['value']:.2f}%
            - Perubahan: {predictions['TPT']['change']:.2f}%
            - Sangat dipengaruhi oleh perubahan entitas non-bank ({57.34:.1f}%)
 
         3. **Indeks Pembangunan Manusia:**
-           - Baseline: {cluster_data['ipm'].mean():.2f} → Prediksi: {predictions['IPM']['value']:.2f}
+           - Baseline: {targets['IPM']:.2f} → Prediksi: {predictions['IPM']['value']:.2f}
            - Perubahan: {predictions['IPM']['change']:.2f}%
            - Membutuhkan kombinasi peningkatan entitas bank dan non-bank
 
         4. **Pertumbuhan Ekonomi:**
-           - Baseline: {cluster_data['pertumbuhan_ekonomi'].mean():.2f}% → Prediksi: {predictions['PE']['value']:.2f}%
+           - Baseline: {targets['PE']:.2f}% → Prediksi: {predictions['PE']['value']:.2f}%
            - Perubahan: {predictions['PE']['change']:.2f}%
            - {'Potensi pertumbuhan lebih tinggi karena efek catching up' if selected_cluster == 2 else 'Pertumbuhan moderat karena ekonomi sudah maju' if selected_cluster == 0 else 'Pertumbuhan sesuai karakteristik wilayah'}
 
@@ -740,6 +685,10 @@ for target in ["PPM", "TPT", "IPM", "PE"]:
         - Mempertimbangkan karakteristik khusus cluster {selected_cluster}
         - Dampak intervensi disesuaikan dengan kondisi baseline wilayah
         """)
+
+except Exception as e:
+    st.error(f"Terjadi kesalahan: {str(e)}")
+    st.write("Detail error untuk debugging:", e)
         
 except Exception as e:
     st.error(f"Terjadi kesalahan: {str(e)}")
