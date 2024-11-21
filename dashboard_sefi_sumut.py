@@ -473,12 +473,12 @@ with col1:
         baseline_bank = data_2023['jumlah_entitas_bank'].mean()
         baseline_nonbank = data_2023['jumlah_entitas_nonbank'].mean()
         baseline_rekening = data_2023['jumlah_rekening_kredit'].mean()
-        baseline_kredit = data_2023['jumlah_penyaluran_kredit'].mean()
+        baseline_kredit = data_2023['penyaluran_kredit'].mean()
         
         # Update baseline targets untuk 2023
         baseline_targets = {
             "PPM": data_2023['persentase_penduduk_miskin'].mean(),
-            "TPT": data_2023['tingkat_pengangguran_terbuka'].mean(),
+            "TPT": data_2023['tingkat_pengangguran'].mean(),
             "IPM": data_2023['ipm'].mean(),
             "PE": data_2023['pertumbuhan_ekonomi'].mean()
         }
