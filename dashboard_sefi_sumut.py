@@ -455,9 +455,18 @@ with tab2:
 # What-If Analysis Section
 st.markdown("""
 ### What-If Analysis
-Simulasikan dampak perubahan indikator inklusi keuangan terhadap kesejahteraan masyarakat di Sumatera Utara.
-Data baseline menggunakan rata-rata kabupaten/kota tahun 2023 sebagai dasar prediksi ke depan.
+
+Simulasikan dampak perubahan indikator inklusi keuangan terhadap kesejahteraan masyarakat di Sumatera Utara. 
+Perubahan positif pada indikator inklusi keuangan akan:
+- Menurunkan Persentase Penduduk Miskin (PPM) dan Tingkat Pengangguran (TPT)
+- Meningkatkan IPM dan Pertumbuhan Ekonomi (PE)
+
+Gunakan slider untuk mengubah nilai variabel dan lihat prediksi perubahannya.
 """)
+
+# Debug data loading
+data = pd.read_excel('hasil_cluster_sumut.xlsx')
+data_2023 = data[data['tahun'] == 2023]
 
 col1, col2 = st.columns(2)
 
@@ -465,20 +474,15 @@ with col1:
     st.subheader("Input Parameters")
     
     try:
-        # Load data 2023
-        data = pd.read_excel('hasil_cluster_sumut.xlsx')
-        data_2023 = data[data['tahun'] == 2023]
-        
         if len(data_2023) == 0:
             st.error("Data tahun 2023 tidak ditemukan!")
-        else:            
-            # Hitung rata-rata provinsi untuk tahun 2023
+        else:
+            # Hitung baseline dari data 2023
             baseline_bank = data_2023['jumlah_entitas_bank'].mean()
             baseline_nonbank = data_2023['jumlah_entitas_nonbank'].mean()
             baseline_rekening = data_2023['jumlah_rekening_kredit'].mean()
             baseline_kredit = data_2023['penyaluran_kredit'].mean()
             
-            # Update baseline targets untuk 2023
             baseline_targets = {
                 "PPM": data_2023['persentase_penduduk_miskin'].mean(),
                 "TPT": data_2023['tingkat_pengangguran'].mean(),
@@ -486,7 +490,7 @@ with col1:
                 "PE": data_2023['pertumbuhan_ekonomi'].mean()
             }
             
-            # Tampilkan informasi baseline 2023
+            # Tampilkan informasi baseline
             st.info(f"""
             **Nilai Baseline (Rata-rata Kabupaten/Kota 2023):**
             
@@ -503,14 +507,13 @@ with col1:
             - Pertumbuhan Ekonomi: {baseline_targets['PE']:.2f}%
             """)
             
-            # Create sliders with percentage changes
-            st.subheader("Simulasi Perubahan")
+            # Sliders
             bank_change = st.slider(
                 "Perubahan Jumlah Entitas Bank (%)", 
                 min_value=-50, 
                 max_value=100, 
                 value=0,
-                help="Persentase perubahan dari kondisi 2023"
+                help="Nilai positif akan menurunkan kemiskinan & pengangguran, meningkatkan IPM & pertumbuhan ekonomi"
             )
             
             nonbank_change = st.slider(
@@ -518,7 +521,7 @@ with col1:
                 min_value=-50,
                 max_value=100,
                 value=0,
-                help="Persentase perubahan dari kondisi 2023"
+                help="Nilai positif akan menurunkan kemiskinan & pengangguran, meningkatkan IPM & pertumbuhan ekonomi"
             )
             
             rekening_change = st.slider(
@@ -526,7 +529,7 @@ with col1:
                 min_value=-50,
                 max_value=100,
                 value=0,
-                help="Persentase perubahan dari kondisi 2023"
+                help="Nilai positif akan menurunkan kemiskinan & pengangguran, meningkatkan IPM & pertumbuhan ekonomi"
             )
             
             kredit_change = st.slider(
@@ -534,89 +537,81 @@ with col1:
                 min_value=-50,
                 max_value=100,
                 value=0,
-                help="Persentase perubahan dari kondisi 2023"
+                help="Nilai positif akan menurunkan kemiskinan & pengangguran, meningkatkan IPM & pertumbuhan ekonomi"
             )
-
-            # Calculate new values
-            new_bank = baseline_bank * (1 + bank_change/100)
-            new_nonbank = baseline_nonbank * (1 + nonbank_change/100)
-            new_rekening = baseline_rekening * (1 + rekening_change/100)
-            new_kredit = baseline_kredit * (1 + kredit_change/100)
 
             with col2:
                 st.subheader("Predicted Impact")
                 
-                # Function to calculate predicted values
-                def predict_impact(bank, nonbank, rekening, kredit, target):
-                    # Weights dengan tanda yang sudah disesuaikan
+                def predict_impact(bank_pct, nonbank_pct, rekening_pct, kredit_pct, target):
+                    # Weights dengan tanda sesuai arah pengaruh
                     weights = {
                         "PPM": {
-                            'bank': -0.505923,    # Negatif karena peningkatan X menurunkan kemiskinan
+                            'bank': -0.505923,
                             'nonbank': -0.091851,
                             'rekening': -0.143531,
                             'kredit': -0.234412
                         },
                         "TPT": {
-                            'bank': -0.196143,    # Negatif karena peningkatan X menurunkan pengangguran
+                            'bank': -0.196143,
                             'nonbank': -0.573377,
                             'rekening': -0.073034,
                             'kredit': -0.133190
                         },
                         "IPM": {
-                            'bank': 0.251957,     # Positif karena peningkatan X meningkatkan IPM
+                            'bank': 0.251957,
                             'nonbank': 0.562416,
                             'rekening': 0.087972,
                             'kredit': 0.081940
                         },
                         "PE": {
-                            'bank': 0.020925,     # Positif karena peningkatan X meningkatkan pertumbuhan
+                            'bank': 0.020925,
                             'nonbank': 0.014357,
                             'rekening': 0.016221,
                             'kredit': 0.016814
                         }
                     }
                     
-                    # Calculate percentage changes from baseline
-                    bank_pct = (bank - baseline_bank) / baseline_bank
-                    nonbank_pct = (nonbank - baseline_nonbank) / baseline_nonbank
-                    rekening_pct = (rekening - baseline_rekening) / baseline_rekening
-                    kredit_pct = (kredit - baseline_kredit) / baseline_kredit
-                    
-                    # Calculate weighted impact
+                    # Hitung dampak total
                     total_impact = (
-                        bank_pct * weights[target]['bank'] +
-                        nonbank_pct * weights[target]['nonbank'] +
-                        rekening_pct * weights[target]['rekening'] +
-                        kredit_pct * weights[target]['kredit']
+                        (bank_pct/100) * weights[target]['bank'] +
+                        (nonbank_pct/100) * weights[target]['nonbank'] +
+                        (rekening_pct/100) * weights[target]['rekening'] +
+                        (kredit_pct/100) * weights[target]['kredit']
                     )
                     
-                    # Calculate predicted value
+                    # Hitung nilai prediksi
                     predicted = baseline_targets[target] * (1 + total_impact)
                     
                     return predicted, total_impact * 100
 
-                # Calculate predictions and changes
+                # Calculate predictions
                 predictions = {}
                 for target in ["PPM", "TPT", "IPM", "PE"]:
-                    pred_value, pct_change = predict_impact(new_bank, new_nonbank, new_rekening, new_kredit, target)
+                    pred_value, pct_change = predict_impact(
+                        bank_change, 
+                        nonbank_change, 
+                        rekening_change, 
+                        kredit_change, 
+                        target
+                    )
                     predictions[target] = {"value": pred_value, "change": pct_change}
 
-                # Display metrics with more context
-                st.subheader("Hasil Simulasi")
+                # Display metrics
                 col_metrics1, col_metrics2 = st.columns(2)
                 
                 with col_metrics1:
                     st.metric(
-                        "Prediksi Persentase Penduduk Miskin", 
-                        f"{predictions['PPM']['value']:.2f}%",
+                        "Prediksi PPM (%)", 
+                        f"{predictions['PPM']['value']:.2f}",
                         f"{predictions['PPM']['change']:.2f}%",
-                        help="Perubahan dari baseline 2023"
+                        help="Nilai negatif menunjukkan penurunan kemiskinan (perbaikan)"
                     )
                     st.metric(
-                        "Prediksi Tingkat Pengangguran", 
-                        f"{predictions['TPT']['value']:.2f}%",
+                        "Prediksi TPT (%)", 
+                        f"{predictions['TPT']['value']:.2f}",
                         f"{predictions['TPT']['change']:.2f}%",
-                        help="Perubahan dari baseline 2023"
+                        help="Nilai negatif menunjukkan penurunan pengangguran (perbaikan)"
                     )
                 
                 with col_metrics2:
@@ -624,13 +619,13 @@ with col1:
                         "Prediksi IPM", 
                         f"{predictions['IPM']['value']:.2f}",
                         f"{predictions['IPM']['change']:.2f}%",
-                        help="Perubahan dari baseline 2023"
+                        help="Nilai positif menunjukkan peningkatan IPM (perbaikan)"
                     )
                     st.metric(
-                        "Prediksi Pertumbuhan Ekonomi", 
-                        f"{predictions['PE']['value']:.2f}%",
+                        "Prediksi PE (%)", 
+                        f"{predictions['PE']['value']:.2f}",
                         f"{predictions['PE']['change']:.2f}%",
-                        help="Perubahan dari baseline 2023"
+                        help="Nilai positif menunjukkan peningkatan pertumbuhan ekonomi (perbaikan)"
                     )
                 
                 # Visualization
@@ -665,55 +660,39 @@ with col1:
                 
                 st.plotly_chart(fig, use_container_width=True)
 
-            # Add detailed interpretation
-            st.markdown("### Interpretasi Hasil")
-            st.write(f"""
-            Hasil simulasi menunjukkan potensi perubahan dari kondisi baseline 2023:
+                # Interpretasi
+                st.markdown("### Interpretasi Hasil")
+                st.write(f"""
+                Simulasi menunjukkan dampak perubahan dari kondisi baseline 2023:
 
-            1. **Persentase Penduduk Miskin (PPM)**:
-               - Baseline 2023: {baseline_targets['PPM']:.2f}%
-               - Prediksi: {predictions['PPM']['value']:.2f}%
-               - Perubahan: {predictions['PPM']['change']:.2f}%
-               - *Insight*: Penurunan kemiskinan dipengaruhi terutama oleh peningkatan entitas bank (50.59%) dan penyaluran kredit (23.44%)
+                1. **Persentase Penduduk Miskin (PPM)**:
+                   - Baseline: {baseline_targets['PPM']:.2f}% → Prediksi: {predictions['PPM']['value']:.2f}%
+                   - Perubahan: {predictions['PPM']['change']:.2f}%
+                   - Dipengaruhi terutama oleh perubahan entitas bank (50.59%) dan penyaluran kredit (23.44%)
 
-            2. **Tingkat Pengangguran**:
-               - Baseline 2023: {baseline_targets['TPT']:.2f}%
-               - Prediksi: {predictions['TPT']['value']:.2f}%
-               - Perubahan: {predictions['TPT']['change']:.2f}%
-               - *Insight*: Penurunan pengangguran sangat responsif terhadap peningkatan entitas non-bank (57.34%)
+                2. **Tingkat Pengangguran**:
+                   - Baseline: {baseline_targets['TPT']:.2f}% → Prediksi: {predictions['TPT']['value']:.2f}%
+                   - Perubahan: {predictions['TPT']['change']:.2f}%
+                   - Sangat responsif terhadap perubahan entitas non-bank (57.34%)
 
-            3. **Indeks Pembangunan Manusia (IPM)**:
-               - Baseline 2023: {baseline_targets['IPM']:.2f}
-               - Prediksi: {predictions['IPM']['value']:.2f}
-               - Perubahan: {predictions['IPM']['change']:.2f}%
-               - *Insight*: Peningkatan seimbang antara entitas bank (25.20%) dan non-bank (56.24%)
+                3. **Indeks Pembangunan Manusia (IPM)**:
+                   - Baseline: {baseline_targets['IPM']:.2f} → Prediksi: {predictions['IPM']['value']:.2f}
+                   - Perubahan: {predictions['IPM']['change']:.2f}%
+                   - Membutuhkan kombinasi peningkatan bank (25.20%) dan non-bank (56.24%)
 
-            4. **Pertumbuhan Ekonomi**:
-               - Baseline 2023: {baseline_targets['PE']:.2f}%
-               - Prediksi: {predictions['PE']['value']:.2f}%
-               - Perubahan: {predictions['PE']['change']:.2f}%
-               - *Insight*: Peningkatan moderat seiring dengan perbaikan sektor keuangan
+                4. **Pertumbuhan Ekonomi**:
+                   - Baseline: {baseline_targets['PE']:.2f}% → Prediksi: {predictions['PE']['value']:.2f}%
+                   - Perubahan: {predictions['PE']['change']:.2f}%
+                   - Menunjukkan respon moderat terhadap perubahan sektor keuangan
 
-            ⚠️ **Catatan Penting**: 
-            - Simulasi menggunakan rata-rata Kabupaten/Kota Sumatera Utara tahun 2023 sebagai baseline
-            - Bobot pengaruh (*feature importance*) diperoleh dari analisis historis 2019-2023
-            - Peningkatan variabel inklusi keuangan akan:
-              * Menurunkan persentase penduduk miskin dan tingkat pengangguran
-              * Meningkatkan IPM dan pertumbuhan ekonomi
-            - Hasil aktual dapat berbeda tergantung kondisi makroekonomi dan kebijakan pemerintah
-            """)
-                
+                ⚠️ **Catatan Interpretasi**: 
+                - Nilai negatif pada PPM dan TPT menunjukkan perbaikan (penurunan)
+                - Nilai positif pada IPM dan PE menunjukkan perbaikan (peningkatan)
+                - Simulasi menggunakan data rata-rata Kabupaten/Kota tahun 2023
+                - Hasil aktual dapat berbeda tergantung kondisi makroekonomi
+                """)
+
     except Exception as e:
-        st.error(f"Terjadi kesalahan dalam membaca atau memproses data: {str(e)}")
-        st.write("""
-        Pastikan file Excel memiliki kolom-kolom berikut:
-        - tahun
-        - persentase_penduduk_miskin
-        - tingkat_pengangguran
-        - ipm
-        - pertumbuhan_ekonomi
-        - jumlah_entitas_bank
-        - jumlah_entitas_nonbank
-        - jumlah_rekening_kredit
-        - penyaluran_kredit
-        """)
+        st.error(f"Terjadi kesalahan: {str(e)}")
+        st.write("Detail error untuk debugging:", e)
+        st.write("Pastikan struktur data sesuai dengan yang dibutuhkan")
