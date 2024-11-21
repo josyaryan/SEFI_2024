@@ -4,6 +4,12 @@ import folium
 from streamlit_folium import folium_static
 import json
 from branca.colormap import LinearColormap
+import numpy as np
+import plotly.graph_objects as go
+import plotly.express as px
+from plotly.subplots import make_subplots
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 # Konfigurasi awal dashboard
 st.set_page_config(
@@ -260,5 +266,186 @@ with tab1:
         st.write("Pastikan semua file berada di folder yang sama dan nama file sesuai")
 
 with tab2:
-    st.markdown("### Analisis Korelasi dan Prediksi")
-    st.write("Konten untuk analisis korelasi dan prediksi akan ditambahkan di sini.")
+   with tab2:
+    # Buat subtabs
+    subtab1, subtab2 = st.tabs(["Analisis Korelasi", "Model Prediksi"])
+    
+    with subtab1:
+        st.markdown("### Analisis Feature Importance")
+        
+        # Data feature importance dari paper
+        feature_importance_data = {
+            'Features': ['Entitas Bank', 'Entitas Non-Bank', 'Rekening Kredit', 'Penyaluran Kredit'],
+            'PPM': [0.505923, 0.091851, 0.143531, 0.234412],
+            'TPT': [0.196143, 0.573377, 0.073034, 0.133190],
+            'IPM': [0.251957, 0.562416, 0.087972, 0.081940],
+            'PE': [0.020925, 0.014357, 0.016221, 0.016814]
+        }
+        
+        # Buat layout dengan 2 kolom
+        col1, col2 = st.columns([2,1])
+        
+        with col1:
+            # Pilihan target variable
+            target_var = st.selectbox(
+                "Pilih Target Variable",
+                ["PPM (Persentase Penduduk Miskin)", 
+                 "TPT (Tingkat Pengangguran Terbuka)",
+                 "IPM (Indeks Pembangunan Manusia)",
+                 "PE (Pertumbuhan Ekonomi)"]
+            )
+            
+            # Map selection to dataframe column
+            target_map = {"PPM (Persentase Penduduk Miskin)": "PPM",
+                         "TPT (Tingkat Pengangguran Terbuka)": "TPT",
+                         "IPM (Indeks Pembangunan Manusia)": "IPM",
+                         "PE (Pertumbuhan Ekonomi)": "PE"}
+            
+            selected_target = target_map[target_var]
+            
+            # Create bar plot using plotly
+            fig = go.Figure(data=[
+                go.Bar(
+                    x=feature_importance_data['Features'],
+                    y=[v*100 for v in feature_importance_data[selected_target]],
+                    marker_color=['#4D96FF', '#FFD93D', '#FF6B6B', '#6BCB77']
+                )
+            ])
+            
+            fig.update_layout(
+                title=f"Feature Importance untuk {target_var}",
+                xaxis_title="Features",
+                yaxis_title="Importance (%)",
+                height=400
+            )
+            
+            st.plotly_chart(fig, use_container_width=True)
+            
+        with col2:
+            st.markdown("### Interpretasi")
+            if selected_target == "PPM":
+                st.write("""
+                - Entitas Bank memiliki pengaruh dominan (50.59%)
+                - Penyaluran Kredit menempati posisi kedua (23.44%)
+                - Menunjukkan pentingnya akses perbankan dalam pengentasan kemiskinan
+                """)
+            elif selected_target == "TPT":
+                st.write("""
+                - Entitas Non-Bank memiliki pengaruh terbesar (57.34%)
+                - Entitas Bank di posisi kedua (19.61%)
+                - Mengindikasikan peran penting lembaga non-bank dalam penciptaan lapangan kerja
+                """)
+            elif selected_target == "IPM":
+                st.write("""
+                - Entitas Non-Bank mendominasi (56.24%)
+                - Entitas Bank berkontribusi signifikan (25.20%)
+                - Menunjukkan pentingnya keragaman layanan keuangan untuk pembangunan manusia
+                """)
+            else:  # PE
+                st.write("""
+                - Pengaruh faktor keuangan relatif kecil
+                - Faktor temporal lebih dominan (93.17%)
+                - Mengindikasikan pertumbuhan ekonomi lebih dipengaruhi faktor siklikal
+                """)
+    
+    with subtab2:
+        st.markdown("### Performa Model Machine Learning")
+        
+        # Data performa model
+        model_performance = {
+            'Target': ['PPM', 'TPT', 'IPM', 'PE'],
+            'Model': ['Gradient Boosting', 'Random Forest', 'Random Forest', 'Gradient Boosting'],
+            'R2_Train': [0.8620, 0.9597, 0.8355, 0.8286],
+            'R2_Test': [0.8620, 0.6514, 0.8355, 0.8286],
+            'RMSE_Train': [0.4496, 0.1293, 0.3383, 0.2702],
+            'RMSE_Test': [0.4496, 0.3592, 0.3383, 0.2702]
+        }
+        
+        # Convert to DataFrame
+        df_performance = pd.DataFrame(model_performance)
+        
+        # Display model performance metrics
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Create heatmap for R2 scores
+            fig_r2 = go.Figure(data=go.Heatmap(
+                z=[df_performance['R2_Train'], df_performance['R2_Test']],
+                x=df_performance['Target'],
+                y=['R² Train', 'R² Test'],
+                colorscale='RdYlBu',
+                text=[[f"{val:.3f}" for val in df_performance['R2_Train']],
+                      [f"{val:.3f}" for val in df_performance['R2_Test']]],
+                texttemplate="%{text}",
+                textfont={"size": 14},
+                hoverongaps=False
+            ))
+            
+            fig_r2.update_layout(
+                title="R² Score per Target Variable",
+                height=300
+            )
+            
+            st.plotly_chart(fig_r2, use_container_width=True)
+            
+        with col2:
+            # Create heatmap for RMSE scores
+            fig_rmse = go.Figure(data=go.Heatmap(
+                z=[df_performance['RMSE_Train'], df_performance['RMSE_Test']],
+                x=df_performance['Target'],
+                y=['RMSE Train', 'RMSE Test'],
+                colorscale='RdYlBu_r',
+                text=[[f"{val:.3f}" for val in df_performance['RMSE_Train']],
+                      [f"{val:.3f}" for val in df_performance['RMSE_Test']]],
+                texttemplate="%{text}",
+                textfont={"size": 14},
+                hoverongaps=False
+            ))
+            
+            fig_rmse.update_layout(
+                title="RMSE per Target Variable",
+                height=300
+            )
+            
+            st.plotly_chart(fig_rmse, use_container_width=True)
+        
+        # Model Summary
+        st.markdown("### Ringkasan Model")
+        
+        # Display model details in an expander
+        with st.expander("Detail Performa Model per Target"):
+            for idx, row in df_performance.iterrows():
+                st.markdown(f"#### {row['Target']}")
+                st.write(f"- Model Terbaik: {row['Model']}")
+                st.write(f"- R² Score (Train/Test): {row['R2_Train']:.3f} / {row['R2_Test']:.3f}")
+                st.write(f"- RMSE (Train/Test): {row['RMSE_Train']:.3f} / {row['RMSE_Test']:.3f}")
+                
+                if row['Target'] == 'TPT':
+                    st.warning("""
+                    ⚠️ Catatan: Model untuk TPT menunjukkan indikasi overfitting,
+                    dengan perbedaan signifikan antara performa train dan test.
+                    Interpretasi hasil perlu dilakukan dengan hati-hati.
+                    """)
+                st.markdown("---")
+        
+        # Rekomendasi
+        st.markdown("### Rekomendasi Kebijakan")
+        st.write("""
+        Berdasarkan hasil analisis model machine learning, beberapa rekomendasi utama:
+        
+        1. **Pengentasan Kemiskinan**
+           - Fokus pada perluasan akses perbankan
+           - Optimalisasi program penyaluran kredit
+           
+        2. **Pengurangan Pengangguran**
+           - Penguatan peran lembaga keuangan non-bank
+           - Program pemberdayaan UMKM
+           
+        3. **Peningkatan IPM**
+           - Diversifikasi layanan keuangan
+           - Kolaborasi bank dan non-bank
+           
+        4. **Pertumbuhan Ekonomi**
+           - Mempertimbangkan faktor siklikal
+           - Kebijakan kontrasiklikal yang tepat
+        """)
