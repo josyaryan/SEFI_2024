@@ -467,6 +467,28 @@ Gunakan slider untuk mengubah nilai variabel dan lihat prediksi perubahannya.
 # Debug data loading
 data = pd.read_excel('hasil_cluster_sumut.xlsx')
 data_2023 = data[data['tahun'] == 2023]
+try:
+    data = pd.read_excel('hasil_cluster_sumut.xlsx')
+    data_2023 = data[data['tahun'] == 2023]
+    
+    # Debug information
+    st.write("Pertumbuhan ekonomi per kabupaten/kota 2023:")
+    st.write(data_2023[['kab_kota', 'pertumbuhan_ekonomi']].sort_values('pertumbuhan_ekonomi', ascending=False))
+    
+    # Hitung rata-rata
+    mean_growth = data_2023['pertumbuhan_ekonomi'].mean()
+    st.write(f"Rata-rata pertumbuhan ekonomi: {mean_growth:.2f}%")
+    
+    # Hitung median juga untuk perbandingan
+    median_growth = data_2023['pertumbuhan_ekonomi'].median()
+    st.write(f"Median pertumbuhan ekonomi: {median_growth:.2f}%")
+    
+    # Tampilkan statistik deskriptif lengkap
+    st.write("Statistik deskriptif pertumbuhan ekonomi:")
+    st.write(data_2023['pertumbuhan_ekonomi'].describe())
+    
+except Exception as e:
+    st.error(f"Error dalam perhitungan: {str(e)}")
 
 col1, col2 = st.columns(2)
 
