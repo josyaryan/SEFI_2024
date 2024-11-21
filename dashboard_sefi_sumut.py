@@ -457,12 +457,12 @@ try:
     st.markdown("""
     ### What-If Analysis
 
-    Simulasikan dampak perubahan indikator inklusi keuangan terhadap kesejahteraan masyarakat di Sumatera Utara. 
+    Simulasikan dampak perubahan indikator inklusi keuangan terhadap kesejahteraan masyarakat di Sumatera Utara.
+    Analisis ini menggunakan model machine learning yang mempertimbangkan karakteristik wilayah berdasarkan hasil klasterisasi.
+    
     Perubahan positif pada indikator inklusi keuangan akan:
     - Menurunkan Persentase Penduduk Miskin (PPM) dan Tingkat Pengangguran (TPT)
     - Meningkatkan IPM dan Pertumbuhan Ekonomi (PE)
-
-    Gunakan slider untuk mengubah nilai variabel dan lihat prediksi perubahannya.
     """)
 
     # Buat layout dengan 2 kolom
@@ -495,7 +495,7 @@ try:
         # Tampilkan karakteristik cluster
         st.info(f"""
         **Karakteristik {cluster_choice}:**
-        
+
         *Baseline Indikator Inklusi Keuangan:*
         - Jumlah Entitas Bank: {cluster_data['jumlah_entitas_bank'].mean():,.0f} unit
         - Jumlah Entitas Non-Bank: {cluster_data['jumlah_entitas_nonbank'].mean():,.0f} unit
@@ -509,14 +509,14 @@ try:
         - Pertumbuhan Ekonomi: {cluster_data['pertumbuhan_ekonomi'].mean():.2f}%
         """)
 
-        # Input sliders
+        # Input sliders dengan penjelasan dampak berdasarkan feature importance
         st.subheader("Simulasi Perubahan")
         bank_change = st.slider(
             "Perubahan Jumlah Entitas Bank (%)", 
             min_value=-50, 
             max_value=100, 
             value=0,
-            help="Dampak: PPM (-50.59%), TPT (-19.61%), IPM (+25.20%), PE (+2.09%)"
+            help="Feature Importance: PPM (50.59%), TPT (19.61%), IPM (25.20%), PE (2.09%)"
         )
 
         nonbank_change = st.slider(
@@ -524,7 +524,7 @@ try:
             min_value=-50,
             max_value=100,
             value=0,
-            help="Dampak: PPM (-9.19%), TPT (-57.34%), IPM (+56.24%), PE (+1.44%)"
+            help="Feature Importance: PPM (9.19%), TPT (57.34%), IPM (56.24%), PE (1.44%)"
         )
 
         rekening_change = st.slider(
@@ -532,7 +532,7 @@ try:
             min_value=-50,
             max_value=100,
             value=0,
-            help="Dampak: PPM (-14.35%), TPT (-7.30%), IPM (+8.80%), PE (+1.62%)"
+            help="Feature Importance: PPM (14.35%), TPT (7.30%), IPM (8.80%), PE (1.62%)"
         )
 
         kredit_change = st.slider(
@@ -540,10 +540,9 @@ try:
             min_value=-50,
             max_value=100,
             value=0,
-            help="Dampak: PPM (-23.44%), TPT (-13.32%), IPM (+8.19%), PE (+1.68%)"
+            help="Feature Importance: PPM (23.44%), TPT (13.32%), IPM (8.19%), PE (1.68%)"
         )
 
-        # Calculate changes
         changes = {
             'bank': bank_change/100,
             'nonbank': nonbank_change/100,
@@ -555,7 +554,7 @@ try:
         st.subheader("Hasil Prediksi Model")
 
         def predict_with_model(changes, target, baseline):
-            # Feature importance dari paper
+            # Feature importance weights
             weights = {
                 "PPM": {
                     'bank': -0.505923,
@@ -593,17 +592,17 @@ try:
 
             # Sesuaikan dampak berdasarkan karakteristik cluster
             if selected_cluster == 0:  # Wilayah Maju
-                impact *= 0.8
+                impact *= 0.8  # Dampak lebih kecil karena sudah maju
             elif selected_cluster == 2:  # Wilayah Tertinggal
-                impact *= 1.2
-
-            # Hitung prediksi
-            if target in ["PPM", "TPT"]:
-                predicted = baseline * (1 - impact)
-            else:
-                predicted = baseline * (1 + impact)
-
-            return predicted, impact * 100
+                impact *= 1.2  # Dampak lebih besar karena potensi catchup
+            
+            # Hitung prediksi (untuk semua indikator menggunakan logika yang sama)
+            predicted = baseline * (1 + impact)
+            
+            # Perubahan persentase
+            percent_change = impact * 100
+            
+            return predicted, percent_change
 
         # Get predictions for each target
         targets = {
@@ -618,15 +617,21 @@ try:
             pred_value, impact = predict_with_model(changes, target, baseline)
             predictions[target] = {"value": pred_value, "change": impact}
 
-            # Display metrics
+            # Display metrics dengan penjelasan arah perubahan
+            if target in ["PPM", "TPT"]:
+                help_text = "Nilai negatif menunjukkan penurunan (perbaikan)"
+            else:
+                help_text = "Nilai positif menunjukkan peningkatan (perbaikan)"
+                
             st.metric(
                 f"Prediksi {target}", 
                 f"{pred_value:.2f}{'%' if target != 'IPM' else ''}",
                 f"{impact:.2f}%",
-                help=f"Perubahan dari baseline cluster {selected_cluster}"
+                help=help_text
             )
 
         # Visualization
+        st.subheader("Visualisasi Perbandingan")
         fig = go.Figure()
 
         variables = list(predictions.keys())
@@ -650,7 +655,9 @@ try:
         fig.update_layout(
             title=f'Perbandingan Baseline vs Prediksi (Cluster {selected_cluster})',
             barmode='group',
-            height=400
+            height=400,
+            yaxis_title='Nilai',
+            xaxis_title='Indikator'
         )
 
         st.plotly_chart(fig, use_container_width=True)
@@ -663,33 +670,35 @@ try:
         1. **Persentase Penduduk Miskin:**
            - Baseline: {targets['PPM']:.2f}% → Prediksi: {predictions['PPM']['value']:.2f}%
            - Perubahan: {predictions['PPM']['change']:.2f}%
+           - Faktor dominan: Entitas Bank (50.59%) dan Penyaluran Kredit (23.44%)
            - {'Dampak lebih signifikan karena kondisi awal yang tertinggal' if selected_cluster == 2 else 'Dampak moderat karena sudah memiliki infrastruktur yang baik' if selected_cluster == 0 else 'Dampak sesuai dengan karakteristik wilayah'}
 
         2. **Tingkat Pengangguran:**
            - Baseline: {targets['TPT']:.2f}% → Prediksi: {predictions['TPT']['value']:.2f}%
            - Perubahan: {predictions['TPT']['change']:.2f}%
-           - Sangat dipengaruhi oleh perubahan entitas non-bank ({57.34:.1f}%)
+           - Faktor dominan: Entitas Non-Bank (57.34%)
+           - {'Perlu fokus pada pengembangan lembaga non-bank' if predictions['TPT']['change'] > -10 else 'Menunjukkan perbaikan signifikan dalam penyerapan tenaga kerja'}
 
         3. **Indeks Pembangunan Manusia:**
            - Baseline: {targets['IPM']:.2f} → Prediksi: {predictions['IPM']['value']:.2f}
            - Perubahan: {predictions['IPM']['change']:.2f}%
-           - Membutuhkan kombinasi peningkatan entitas bank dan non-bank
+           - Faktor dominan: Kombinasi Entitas Bank (25.20%) dan Non-Bank (56.24%)
+           - {'Potensi peningkatan tinggi karena gap yang besar' if selected_cluster == 2 else 'Peningkatan moderat karena IPM sudah tinggi' if selected_cluster == 0 else 'Peningkatan sesuai karakteristik wilayah'}
 
         4. **Pertumbuhan Ekonomi:**
            - Baseline: {targets['PE']:.2f}% → Prediksi: {predictions['PE']['value']:.2f}%
            - Perubahan: {predictions['PE']['change']:.2f}%
-           - {'Potensi pertumbuhan lebih tinggi karena efek catching up' if selected_cluster == 2 else 'Pertumbuhan moderat karena ekonomi sudah maju' if selected_cluster == 0 else 'Pertumbuhan sesuai karakteristik wilayah'}
+           - Menunjukkan respon moderat terhadap perubahan sektor keuangan
+           - {'Potensi pertumbuhan lebih tinggi karena efek catching up' if selected_cluster == 2 else 'Pertumbuhan stabil karena ekonomi sudah maju' if selected_cluster == 0 else 'Pertumbuhan sesuai potensi wilayah'}
 
         ⚠️ **Catatan Penting**: 
-        - Prediksi berdasarkan model machine learning yang dilatih dengan data 2019-2023
+        - Prediksi menggunakan model machine learning yang dilatih dengan data 2019-2023
         - Mempertimbangkan karakteristik khusus cluster {selected_cluster}
         - Dampak intervensi disesuaikan dengan kondisi baseline wilayah
+        - Nilai negatif pada PPM dan TPT menunjukkan perbaikan (penurunan)
+        - Nilai positif pada IPM dan PE menunjukkan perbaikan (peningkatan)
         """)
 
-except Exception as e:
-    st.error(f"Terjadi kesalahan: {str(e)}")
-    st.write("Detail error untuk debugging:", e)
-        
 except Exception as e:
     st.error(f"Terjadi kesalahan: {str(e)}")
     st.write("Detail error untuk debugging:", e)
