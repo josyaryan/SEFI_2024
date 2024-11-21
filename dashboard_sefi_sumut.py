@@ -605,26 +605,81 @@ try:
             'kredit': kredit_change/100
         }
         
-        # Mapping nama variabel
-        var_mapping = {
-            "PPM": "persentase_penduduk_miskin",
-            "TPT": "tingkat_pengangguran",
-            "IPM": "ipm",
-            "PE": "pertumbuhan_ekonomi"
+        # Perbaiki mapping nama variabel
+var_mapping = {
+    "PPM": "persentase_penduduk_miskin",
+    "TPT": "tingkat_pengangguran",
+    "IPM": "ipm",
+    "PE": "pertumbuhan_ekonomi"
+}
+
+def predict_with_model(cluster_data, changes, target):
+    # Feature importance dari paper
+    weights = {
+        "PPM": {
+            'bank': -0.505923,
+            'nonbank': -0.091851,
+            'rekening': -0.143531,
+            'kredit': -0.234412
+        },
+        "TPT": {
+            'bank': -0.196143,
+            'nonbank': -0.573377,
+            'rekening': -0.073034,
+            'kredit': -0.133190
+        },
+        "IPM": {
+            'bank': 0.251957,
+            'nonbank': 0.562416,
+            'rekening': 0.087972,
+            'kredit': 0.081940
+        },
+        "PE": {
+            'bank': 0.020925,
+            'nonbank': 0.014357,
+            'rekening': 0.016221,
+            'kredit': 0.016814
         }
-        
-        predictions = {}
-        for target in ["PPM", "TPT", "IPM", "PE"]:
-            pred_value, impact = predict_with_model(cluster_data, changes, target)
-            predictions[target] = {"value": pred_value, "change": impact}
-            
-            # Display metrics dengan konteks cluster
-            st.metric(
-                f"Prediksi {target}", 
-                f"{pred_value:.2f}{'%' if target != 'IPM' else ''}",
-                f"{impact:.2f}%",
-                help=f"Perubahan dari baseline cluster {selected_cluster}"
-            )
+    }
+    
+    # Ambil nilai baseline menggunakan mapping yang benar
+    baseline = cluster_data[var_mapping[target]].mean()
+    
+    # Hitung dampak
+    impact = (
+        changes['bank'] * weights[target]['bank'] +
+        changes['nonbank'] * weights[target]['nonbank'] +
+        changes['rekening'] * weights[target]['rekening'] +
+        changes['kredit'] * weights[target]['kredit']
+    )
+    
+    # Sesuaikan dampak berdasarkan karakteristik cluster
+    if selected_cluster == 0:  # Wilayah Maju
+        impact *= 0.8  # Dampak lebih kecil karena sudah maju
+    elif selected_cluster == 2:  # Wilayah Tertinggal
+        impact *= 1.2  # Dampak lebih besar karena potensi catchup
+    
+    # Hitung prediksi
+    if target in ["PPM", "TPT"]:  # Untuk indikator yang seharusnya turun
+        predicted = baseline * (1 - impact)
+    else:  # Untuk IPM dan PE yang seharusnya naik
+        predicted = baseline * (1 + impact)
+    
+    return predicted, impact * 100
+
+# Gunakan fungsi untuk prediksi
+predictions = {}
+for target in ["PPM", "TPT", "IPM", "PE"]:
+    pred_value, impact = predict_with_model(cluster_data, changes, target)
+    predictions[target] = {"value": pred_value, "change": impact}
+    
+    # Display metrics dengan konteks cluster
+    st.metric(
+        f"Prediksi {target}", 
+        f"{pred_value:.2f}{'%' if target != 'IPM' else ''}",
+        f"{impact:.2f}%",
+        help=f"Perubahan dari baseline cluster {selected_cluster}"
+    )
         
         # Visualisasi
         fig = go.Figure()
