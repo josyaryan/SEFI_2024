@@ -449,3 +449,194 @@ with tab2:
            - Mempertimbangkan faktor siklikal
            - Kebijakan kontrasiklikal yang tepat
         """)
+
+# Tambahkan kode ini di dalam subtab2 setelah bagian Rekomendasi Kebijakan
+
+# What-If Analysis Section
+st.markdown("### What-If Analysis")
+st.write("""
+Simulasikan dampak perubahan indikator inklusi keuangan terhadap kesejahteraan masyarakat.
+Gunakan slider untuk mengubah nilai variabel dan lihat prediksi yang dihasilkan.
+""")
+
+# Create columns for input controls
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Input Parameters")
+    
+    # Baseline values (median dari data)
+    baseline_bank = 25.0  # median jumlah entitas bank
+    baseline_nonbank = 4.0  # median jumlah entitas non-bank
+    baseline_rekening = 35561.0  # median jumlah rekening kredit
+    baseline_kredit = 2150136685685  # median penyaluran kredit
+    
+    # Create sliders with percentage changes
+    bank_change = st.slider(
+        "Perubahan Jumlah Entitas Bank (%)", 
+        min_value=-50, 
+        max_value=100, 
+        value=0,
+        help="Persentase perubahan dari nilai baseline"
+    )
+    
+    nonbank_change = st.slider(
+        "Perubahan Jumlah Entitas Non-Bank (%)",
+        min_value=-50,
+        max_value=100,
+        value=0
+    )
+    
+    rekening_change = st.slider(
+        "Perubahan Jumlah Rekening Kredit (%)",
+        min_value=-50,
+        max_value=100,
+        value=0
+    )
+    
+    kredit_change = st.slider(
+        "Perubahan Jumlah Penyaluran Kredit (%)",
+        min_value=-50,
+        max_value=100,
+        value=0
+    )
+    
+    # Calculate new values
+    new_bank = baseline_bank * (1 + bank_change/100)
+    new_nonbank = baseline_nonbank * (1 + nonbank_change/100)
+    new_rekening = baseline_rekening * (1 + rekening_change/100)
+    new_kredit = baseline_kredit * (1 + kredit_change/100)
+
+with col2:
+    st.subheader("Predicted Impact")
+    
+    # Function to calculate predicted values based on feature importance
+    def predict_impact(bank, nonbank, rekening, kredit, target):
+        if target == "PPM":
+            # Feature importance weights dari paper
+            weights = {
+                'bank': 0.505923,
+                'nonbank': 0.091851,
+                'rekening': 0.143531,
+                'kredit': 0.234412
+            }
+            baseline = 10.59  # nilai rata-rata PPM dari data
+        elif target == "TPT":
+            weights = {
+                'bank': 0.196143,
+                'nonbank': 0.573377,
+                'rekening': 0.073034,
+                'kredit': 0.133190
+            }
+            baseline = 4.81  # nilai rata-rata TPT dari data
+        elif target == "IPM":
+            weights = {
+                'bank': 0.251957,
+                'nonbank': 0.562416,
+                'rekening': 0.087972,
+                'kredit': 0.081940
+            }
+            baseline = 71.32  # nilai rata-rata IPM dari data
+        else:  # PE
+            weights = {
+                'bank': 0.020925,
+                'nonbank': 0.014357,
+                'rekening': 0.016221,
+                'kredit': 0.016814
+            }
+            baseline = 3.33  # nilai rata-rata PE dari data
+            
+        # Calculate percentage changes from baseline
+        bank_pct = (bank - baseline_bank) / baseline_bank
+        nonbank_pct = (nonbank - baseline_nonbank) / baseline_nonbank
+        rekening_pct = (rekening - baseline_rekening) / baseline_rekening
+        kredit_pct = (kredit - baseline_kredit) / baseline_kredit
+        
+        # Calculate weighted impact
+        total_impact = (
+            bank_pct * weights['bank'] +
+            nonbank_pct * weights['nonbank'] +
+            rekening_pct * weights['rekening'] +
+            kredit_pct * weights['kredit']
+        )
+        
+        # Apply impact to baseline
+        predicted = baseline * (1 + total_impact)
+        
+        return predicted
+    
+    # Calculate predictions for all targets
+    predicted_ppm = predict_impact(new_bank, new_nonbank, new_rekening, new_kredit, "PPM")
+    predicted_tpt = predict_impact(new_bank, new_nonbank, new_rekening, new_kredit, "TPT")
+    predicted_ipm = predict_impact(new_bank, new_nonbank, new_rekening, new_kredit, "IPM")
+    predicted_pe = predict_impact(new_bank, new_nonbank, new_rekening, new_kredit, "PE")
+    
+    # Create metrics with comparisons
+    col_metrics1, col_metrics2 = st.columns(2)
+    
+    with col_metrics1:
+        st.metric(
+            "Prediksi PPM (%)", 
+            f"{predicted_ppm:.2f}",
+            f"{predicted_ppm - 10.59:.2f}"
+        )
+        st.metric(
+            "Prediksi TPT (%)", 
+            f"{predicted_tpt:.2f}",
+            f"{predicted_tpt - 4.81:.2f}"
+        )
+    
+    with col_metrics2:
+        st.metric(
+            "Prediksi IPM", 
+            f"{predicted_ipm:.2f}",
+            f"{predicted_ipm - 71.32:.2f}"
+        )
+        st.metric(
+            "Prediksi PE (%)", 
+            f"{predicted_pe:.2f}",
+            f"{predicted_pe - 3.33:.2f}"
+        )
+    
+    # Add visualization of changes
+    fig = go.Figure()
+    
+    variables = ['PPM', 'TPT', 'IPM', 'PE']
+    baseline_values = [10.59, 4.81, 71.32, 3.33]
+    predicted_values = [predicted_ppm, predicted_tpt, predicted_ipm, predicted_pe]
+    
+    fig.add_trace(go.Bar(
+        name='Baseline',
+        x=variables,
+        y=baseline_values,
+        marker_color='#4D96FF'
+    ))
+    
+    fig.add_trace(go.Bar(
+        name='Predicted',
+        x=variables,
+        y=predicted_values,
+        marker_color='#6BCB77'
+    ))
+    
+    fig.update_layout(
+        title='Perbandingan Baseline vs Predicted Values',
+        barmode='group',
+        height=400
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
+
+# Add interpretation
+st.markdown("### Interpretasi Hasil")
+st.write("""
+Hasil simulasi di atas menunjukkan dampak potensial dari perubahan indikator inklusi keuangan terhadap kesejahteraan masyarakat:
+
+- **Persentase Penduduk Miskin (PPM)**: Perubahan didominasi oleh jumlah entitas bank dan penyaluran kredit
+- **Tingkat Pengangguran Terbuka (TPT)**: Sangat dipengaruhi oleh perubahan jumlah entitas non-bank
+- **Indeks Pembangunan Manusia (IPM)**: Responsif terhadap kombinasi entitas bank dan non-bank
+- **Pertumbuhan Ekonomi (PE)**: Relatif kurang sensitif terhadap perubahan indikator keuangan
+
+⚠️ **Catatan**: Hasil simulasi ini adalah estimasi berdasarkan data historis dan feature importance. 
+Dampak aktual dapat berbeda karena kompleksitas faktor ekonomi dan sosial lainnya.
+""")
